@@ -4,10 +4,14 @@ dist/
 build/
 
 # Environment Variables
-.env
-server/.env
+# Ignore in client and server folders specifically
+client/node_modules/
 client/.env
+server/node_modules/
+server/.env
 
 # Logs
 *.log
+
+
 
