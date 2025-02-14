@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axiosInstance from '../utils/users/axiosInstance'; 
+import axiosInstance from '../utils/user/axiosInstance'; 
 
 import { ILoginData } from '../types/User';
 
@@ -10,8 +10,6 @@ interface LoginState {
   token: string | null;
   isBlocked: string | boolean | null;
   isRoleChanged: string | boolean | null;
-
-
   otpLoading: boolean; // loading state for OTP
   otpError: string | null; // error state for OTP
 }
@@ -36,49 +34,27 @@ export const loginUser = createAsyncThunk(
       const { token } = response.data;
       const { isBlocked, isRoleChanged } = response.data.userData; // Extract from nested userData
 
-
-      
-      console.log("response.data", response.data);
-      
-      console.log("loginUser slice succ token : ", token);
-      console.log("loginUser slice succ isBlocked : ", isBlocked);
-      console.log("loginUser slice succ isRoleChanged : ", isRoleChanged);
-
-
-
       if (isBlocked) {
-        console.error("Account is blocked, stopping login process.");
-        console.log("loginUser slice succ isBlocked : ", isBlocked);
-
+        console.error("Account is blocked, stopping login process.", isBlocked);
         return rejectWithValue({
           message: "Your account has been blocked.",
           isBlocked: true,
         });
       }
 
-
-
-      // Add a delay before proceeding (e.g., 3 seconds)
-      // await new Promise((resolve) => setTimeout(resolve, 333000)); // 3000ms = 3 seconds
-
       localStorage.setItem('token', token);
       localStorage.setItem('isBlocked', 'false');
       localStorage.setItem('isRoleChanged', isRoleChanged);
       return response.data;
     } catch (error: any) {
-      console.log("error in loginUser slice : ",error);      
+      console.log("error in loginUser slice :- ",error);      
       const { message, needsVerification, isBlocked, isRoleChanged } = error.data;
 
-      console.log("loginUser slice err isBlocked : ", isBlocked);
-      console.log("loginUser slice err isRoleChanged : ", isBlocked);
-
-      
-      console.log( "message, needsVerification",message, needsVerification);
-        return rejectWithValue({
-          message: error.data.message || "An error occurred",
-          needsVerification: error.data.needsVerification || false,
-          isBlocked,
-        });
+      return rejectWithValue({
+        message: error.data.message || "An error occurred",
+        needsVerification: error.data.needsVerification || false,
+        isBlocked,
+      });
     }
   }
 );
@@ -92,7 +68,7 @@ export const sendOtp = createAsyncThunk(
       const response = await axiosInstance.post('/auth/verify-login', data); 
       return response.data; 
     } catch (error: any) {
-      console.log("error in loginSlice verify now", error);
+      console.log("error in login verify Slice :- ", error);
       return rejectWithValue(error.response.data);
     }
   }
@@ -105,13 +81,7 @@ const loginSlice = createSlice({
     logout(state) {
       state.user = null;
       state.token = null;
-      // localStorage.removeItem('token'); 
-      // localStorage.removeItem('userRole');
-      // localStorage.removeItem('isBlocked'); 
-      // localStorage.removeItem('isRoleChanged');
-
       localStorage.clear(); // Clear all local storage items
-
     }
   },
   extraReducers: (builder) => {

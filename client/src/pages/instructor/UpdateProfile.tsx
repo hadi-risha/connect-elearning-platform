@@ -1,8 +1,8 @@
-import { IconamoonProfileCircleBold, BitcoinIconsArrowLeftFilled} from '../../assets/usersIcons/ProfileIcon';
+import { IconamoonProfileCircleBold, BitcoinIconsArrowLeftFilled} from '../../assets/userIcons/ProfileIcon';
 import { FaCamera, FaUserCircle } from 'react-icons/fa';
 import { useEffect, useState, useRef } from 'react'
-import axiosInstance from '../../utils/users/axiosInstance'
-import config from '../../config';
+import axiosInstance from '../../utils/user/axiosInstance'
+import config from '../../config/config';
 import axios from 'axios'
 import { useNavigate, Link } from 'react-router-dom'; // Import useNavigate
 

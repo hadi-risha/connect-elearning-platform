@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from 'jsonwebtoken';
 import { HttpStatus } from '../utils/httpStatusCodes';
 import { log } from "winston";
-import { UserService } from '../services/userService';
+import { UserService } from '../services/userRepoService';
 
 const userService = new UserService();
 
@@ -15,24 +15,17 @@ interface IUserData {
 }
 
 export const checkUserRole = (uRole: string) =>  {
-    // return (req: Request, res: Response, next: NextFunction): any => {
-        return async (req: Request, res: Response, next: NextFunction): Promise<any> => { // Mark the function async
+    return async (req: Request, res: Response, next: NextFunction): Promise<any> => { 
 
         if (!req.userData) {
             return res.status(HttpStatus.FORBIDDEN).json({ message: 'No user data available' });
         }
         const {id, role, isBlocked, isRoleChanged } = req.userData as IUserData;
 
-
-        console.log("user details in checkUserRole", req.userData);
-
         const existingProfile = await userService.findUserById(id);
         if (!existingProfile) {
             return res.status(HttpStatus.NOT_FOUND).json({ message: "User doesn't exist" });
         }
-
-        console.log("check isBlocked accessible in checkUserRole : ", existingProfile.isBlocked);
-        console.log("check isRoleChanged accessible in checkUserRole : ", existingProfile.isRoleChanged);
 
         if ( existingProfile.isBlocked ) {
             console.log("User account has been blocked");
@@ -42,16 +35,8 @@ export const checkUserRole = (uRole: string) =>  {
         if ( existingProfile.isRoleChanged ) {
             console.log("User role changed");
             const updateisRoleChanged = await userService.updateIsRoleChanged(id);   //change rolechanged to false
-            console.log("updateisRoleChanged", updateisRoleChanged);
             return res.status(HttpStatus.FORBIDDEN).json({ message: "Your role has been changed. Please log in again.", isRoleChanged: true });
         }
-
-
-        console.log("checkUserRole ------role from req", role);
-        console.log("checkUserRole ------role from prop", uRole);
-
-       
-        
         
         if (typeof req.userData === 'object' && 'role' in req.userData) {
             const userRole = (req.userData as jwt.JwtPayload).role;

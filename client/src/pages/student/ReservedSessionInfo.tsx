@@ -1,9 +1,9 @@
-import instructor from '../../assets/userImgs/instructor.png';
-import { EmojioneStar, EmojioneMonotoneStar } from '../../assets/usersIcons/HomeIcons';
+import instructor from '../../assets/userImages/instructor.png';
+import { EmojioneStar, EmojioneMonotoneStar } from '../../assets/userIcons/HomeIcons';
 import { useEffect, useState } from 'react';
-import axiosInstance from '../../utils/users/axiosInstance';
+import axiosInstance from '../../utils/user/axiosInstance';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import Modal from '../../utils/users/userLogout';
+import Modal from '../../utils/user/userLogout';
 
 
 interface ISession {
@@ -27,21 +27,20 @@ interface ISession {
 
 const ReservedSessionInfo = () => {
     const isCallEnded = localStorage.getItem("isCallEnded");
-
     const navigate = useNavigate();
     const { id } = useParams();
-
-    const { state } = useLocation(); // access state from navigation
-    const { bookingId, date, time, meetingRoomId } = state || {}; 
-
+    // console.log("id :-", id);
     
+    const { state } = useLocation(); // access state from navigation
+    const { bookingId, date, time, meetingRoomId } = state || {};
+    // console.log("bookingId, date, time, meetingRoomId :-", bookingId, date, time, meetingRoomId);
+    // console.log("bookingId :- ", bookingId);
 
     const [session, setSession] = useState<ISession>();
     const [loading, setLoading] = useState(true);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [sessionCancelled, setSessionCancelled] = useState(false);
-
 
     const [isRatingModalOpen, setRatingModalOpen] = useState(false); // To manage modal visibility
     const [rating, setRating] = useState('');
@@ -50,7 +49,6 @@ const ReservedSessionInfo = () => {
         async function fetchSession() {
             try {
                 const response = await axiosInstance.get(`/student/session/${id}`); 
-                console.log("response : ", response.data.session);
                 setSession(response.data.session); 
                 setLoading(false);
             } catch (error) {
@@ -87,15 +85,8 @@ const ReservedSessionInfo = () => {
 
     const handleCancelSession = async () => {
         try {
-          const response = await axiosInstance.put('/student/cancel-booking', { bookingId } );
-          console.log("response111111111111111111", response);
+            const response = await axiosInstance.put('/student/cancel-booking', { bookingId } );
           
-          // Handle response
-        //   if (response.status === 200) {
-        //     setButtonText('Session Cancelled');
-        //     // navigate('/student/upcoming-sessions');            
-        //   }
-
             setSessionCancelled(true)
             // navigate('/student/upcoming-sessions');  
         } catch (error) {
@@ -106,29 +97,19 @@ const ReservedSessionInfo = () => {
 
 
     const handleRating = (ratingValue: string) => {
-
-        console.log("ratingValue--------------------------", ratingValue);
-        
+        // console.log("ratingValue :- ", ratingValue);
         setRating(ratingValue); // Set the selected rating
-        // setRatingModalOpen(false); // Close the modal after selection
-        console.log(`Instructor rated as: ${ratingValue}`);
     };
 
 
-    
-
     const handleStatusAndRating = async () => {
-        console.log("submittttttttttttttttttt", rating);
+        // console.log("rating :- ", rating);
 
         if (!rating) {
             console.error('No rating selected');
             alert('No rating selected')
             return;
-        }
-        // setRatingModalOpen(false)
-
-        console.log("submittttttttttttttttttt", rating);
-        
+        }        
         try {
             const data = {
                 bookingId: bookingId,
@@ -137,13 +118,8 @@ const ReservedSessionInfo = () => {
                 feedback: '', // You can modify this as needed
             };
 
-            console.log("Data sent to API:", data);
-
-
             // Send data to update session completion
-            const updatedStatusandRating = await axiosInstance.post('/student/session-complete/rating', data);
-            console.log("updatedStatusandRating", updatedStatusandRating);
-            
+            const updatedStatusandRating = await axiosInstance.post('/student/session-complete/rating', data);            
 
             if (updatedStatusandRating.status === 200 || updatedStatusandRating.status === 201) {
                 // Handle success if needed
@@ -313,32 +289,45 @@ const ReservedSessionInfo = () => {
 
                     {isRatingModalOpen && (
                         <div className="fixed inset-0 flex justify-center items-center bg-gray-500 bg-opacity-50 z-50">
-                            <div className="bg-white p-5 rounded-lg shadow-lg">
+                            <div className="bg-white p-14 rounded-lg shadow-lg space-y-8">
                                 <h2 className="text-xl mb-4 text-black font-bold">Rate the Instructor</h2>
                                 <div className="flex space-x-4">
-                                <button
-                                    onClick={() => handleRating('poor')}
-                                    className="w-20 h-9 bg-[#ff5c4c] text-white rounded-full">
-                                    Poor
-                                </button>
-                                <button
-                                    onClick={() => handleRating('good')}
-                                    className="w-20 h-9 bg-[#ffdb4c] text-white rounded-full">
-                                    Good
-                                </button>
-                                <button
-                                    onClick={() => handleRating('excellent')}
-                                    className="w-20 h-9 bg-[#3ee1a6] text-white rounded-full">
-                                    Excellent
-                                </button>
+                                    <button
+                                        onClick={() => handleRating('poor')}
+                                        className={`w-20 h-9 bg-[#ff5c4c] text-white rounded-full ${
+                                            rating === 'poor' ? 'border-2 border-black' : ''
+                                        }`}>
+                                        Poor
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleRating('good')}
+                                        className={`w-20 h-9 bg-[#ffdb4c] text-white rounded-full ${
+                                            rating === 'good' ? 'border-2 border-black' : ''
+                                        }`}>
+                                        Good
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleRating('excellent')}
+                                        className={`w-20 h-9 bg-[#3ee1a6] text-white rounded-full ${
+                                            rating === 'excellent' ? 'border-2 border-black' : ''
+                                        }`}>
+                                        Excellent
+                                    </button>
                                 </div>
+
                                 <button
-                                onClick={() => setRatingModalOpen(false)} // Close modal
-                                className="ml-3 mt-4 w-5/12 py-2 text-black border border-black  text-center ">
-                                Close
+                                    onClick={() => setRatingModalOpen(false)} // Close modal
+                                    className="ml-3 mt-4 w-5/12 py-2 text-black border border-black  text-center ">
+                                    Close
                                 </button>
 
-                                <button onClick={handleStatusAndRating} className="ml-4 text-black submit-rating mt-4 w-5/12  py-2 border border-black  text-center">Submit</button>
+                                <button 
+                                    onClick={handleStatusAndRating} 
+                                    className="ml-4 text-black submit-rating mt-4 w-5/12  py-2 border border-black  text-center">
+                                    Submit
+                                </button>
 
                             </div>
                         </div>

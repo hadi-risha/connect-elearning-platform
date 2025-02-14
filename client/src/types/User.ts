@@ -1,4 +1,4 @@
-//for registration purpose
+//for registration purpose, used in slices
 export interface IRegisterData {
     firstName: string;
     lastName: string;

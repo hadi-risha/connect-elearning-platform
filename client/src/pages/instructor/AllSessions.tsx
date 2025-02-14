@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import axiosInstance from '../../utils/users/axiosInstance'
+import { useEffect, useState } from 'react';
+import '../../styles/stdAllSessions.css';
+import axiosInstance from '../../utils/user/axiosInstance'
 import { useNavigate } from 'react-router-dom';
 
 interface ISession {
@@ -20,20 +21,22 @@ interface ISession {
     firstName: string;
     lastName: string;
   };
+  category: string;
+  createdAt: string;
 }
 
 interface IBooking {
   _id: string;
   studentId: string;
   sessionId: {
-      _id: string;
-      title: string;
-      duration: string;
-      fee: string;
-      descriptionTitle: string;
-      coverImage: {
-          url: string;
-      };
+    _id: string;
+    title: string;
+    duration: string;
+    fee: string;
+    descriptionTitle: string;
+    coverImage: {
+        url: string;
+    };
   };
   instructorId: {
       firstName: string;
@@ -44,7 +47,6 @@ interface IBooking {
   status: string;
 }
 
-
 const AllSessions = () => {
   const navigate = useNavigate();  
 
@@ -52,32 +54,42 @@ const AllSessions = () => {
   const [loading, setLoading] = useState(true);
   const [bookings, setBooking] = useState<IBooking[]>([]); 
 
+  const [selectedCategoryValue, setSelectedCategoryValue] = useState("all");
+  
+    const [filters, setFilters] = useState({
+      fee: "",
+      date: ""
+    });
+  
+    const [sort, setSort] = useState({
+      fee: "none", // "ascending", "descending"
+      title: "none" // "asc", "desc"
+    });
+  
+    const [currentPage, setCurrentPage] = useState(1); // Pagination state
+    const cardsPerPage = 9;
+
   useEffect(() => {
     async function fetchSessions() {
       try {
         const response = await axiosInstance.get("/instructor/sessions");
-        console.log("Response data:", response.data);
-  
-        const sessions = response.data.sessions || []; 
-  
+        const sessions = response.data.sessions || [];
+
         if (!Array.isArray(sessions)) {
           console.error('Unexpected sessions format:', response.data);
           setLoading(false);
           return;
         }
-  
-        console.log("Parsed Sessions:", sessions);
-        setSessions(sessions); // Update state with session data
+
+        setSessions(sessions);
         setLoading(false);
       } catch (error) {
         console.error('Failed to fetch sessions:', error);
         setLoading(false);
       }
     }
-  
     fetchSessions();
   }, []);
-
 
   
   const handleViewDetails = (sessionId: string) => {
@@ -87,43 +99,210 @@ const AllSessions = () => {
 
 
 
-
-
   
+  const applyFiltersAndSorting = () => {
+    let filteredData = [...sessions];
+
+    if (selectedCategoryValue !== "all") {
+      filteredData = filteredData.filter(session => session.category === selectedCategoryValue);
+    }
+
+    if (filters.fee) {
+      filteredData = filteredData.filter(card => card.fee === Number(filters.fee));
+    }
+
+    if (filters.date) {
+      filteredData = filteredData.filter(card => {
+        const cardDate = new Date(card.createdAt);
+        const now = new Date();
+
+        if (filters.date === "This Week") {
+          const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+          startOfWeek.setHours(0, 0, 0, 0);
+          return cardDate >= startOfWeek;
+        } else if (filters.date === "This Month") {
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          startOfMonth.setHours(0, 0, 0, 0);
+          return cardDate >= startOfMonth;
+        } else if (filters.date === "Recently Added") {
+          const daysAgo = new Date();
+          daysAgo.setDate(daysAgo.getDate() - 3);
+          return cardDate >= daysAgo;
+        }
+        return true;
+      });
+    }
+
+    if (sort.fee === "ascending") {
+      filteredData = filteredData.sort((a, b) => a.fee - b.fee);
+    } else if (sort.fee === "descending") {
+      filteredData = filteredData.sort((a, b) => b.fee - a.fee);
+    }
+
+    if (sort.title === "asc") {
+      filteredData = filteredData.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sort.title === "desc") {
+      filteredData = filteredData.sort((a, b) => b.title.localeCompare(a.title));
+    }
+
+    return filteredData;
+  };
+
+  const filteredAndSortedCards = applyFiltersAndSorting();
+  const indexOfLastCard = currentPage * cardsPerPage;
+  const indexOfFirstCard = indexOfLastCard - cardsPerPage;
+  const currentCards = filteredAndSortedCards.slice(indexOfFirstCard, indexOfLastCard);
+  const totalPages = Math.ceil(filteredAndSortedCards.length / cardsPerPage);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + "...";
+    }
+    return text;
+  };
 
   return (
-    <>
-      <div className='w-screen h-auto bg-white'>
+    <div className='mb-32 pt-5 px-36 bg-[rgba(var(--vws-light-rgb),var(--vws-bg-opacity))] w-full min-h-[100vh]'>
+      <div className='w-full bg-white'>
+        <div className="w-full flex space-x-2 border-[3px] border-purple-400 rounded-xl select-none">
+          {[
+            { label: "All", value: "all" },
+            { label: "Science", value: "Science" },
+            { label: "Technology", value: "Technology" },
+            { label: "Mathematics", value: "Mathematics" },
+            { label: "History", value: "History" },
+            { label: "Languages", value: "Languages" },
+            { label: "Finance", value: "Finance" },
+          ].map((option) => (
+            <label
+              key={option.value}
+              className="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer"
+            >
+              <input
+                type="radio"
+                name="category"
+                value={option.value}
+                className="peer hidden"
+                checked={selectedCategoryValue === option.value}
+                onChange={() => setSelectedCategoryValue(option.value)}
+              />
+              <span
+                className="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[blueviolet] peer-checked:to-[violet] peer-checked:text-white text-gray-700 p-2 rounded-lg transition duration-150 ease-in-out"
+              >
+                {option.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
 
-        {/* ALL SESSIONS */}
-        <div className="ml-28 mr-36 mt-8 mb-36 h-auto py-16 px-5 shadow-2xl grid grid-cols-3 gap-6">
-            {loading ? (
-                <p>Loading...</p>
-            ) : sessions.length > 0 ? (
-              sessions.map((session) => (
-            
-                    <div key={session._id} className='relative w-[380px] h-[460px] rounded-2xl border-2 border-black'>
-                        <div className='absolute inset-0 bg-black opacity-50 rounded-2xl'></div> {/* Black overlay */}
-                        <div className='w-full h-full rounded-2xl' style={{ backgroundImage: `url(${session.coverImage.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
-                        <div className='absolute bottom-0 left-0 w-full  bg-opacity-60 py-4 px-7 text-white rounded-b-2xl'>
-                            <h3 className='mb-3 text-2xl font-bold font-serif'>{session.title}</h3>
-                            <p className='text-lg mb-5'>Fees: ₹{session.fee}</p>
-                            <button 
-                                onClick={() => handleViewDetails(session._id)} 
-                                className='mt-2 mb-7 py-1 px-4 bg-[#f4c857] border-2 border-white text-black rounded-full hover:bg-[#2cc58a]  transition duration-300 transform hover:scale-105 active:scale-95'>
-                                view Details
-                            </button>
-                        </div>
-                    </div>
-                ))
-            ) : (
-                <p>No upcoming sessions available.</p>
-            )}
+      <div className='flex space-x-10'>
+        <div className="mt-5 filters">
+          <p className='ml-1 font-sans font-bold'>Filter by</p>
+          <div className='mt-3'>
+            <select
+              className="border border-gray-300 p-2 rounded-lg"
+              onChange={(e) => setFilters({ ...filters, fee: e.target.value })}
+            >
+              <option value="">Fee</option>
+              <option value="2000">₹2000</option>
+              <option value="3000">₹3000</option>
+            </select>
+
+            <select
+              className="ml-3 border border-gray-300 p-2 rounded-lg"
+              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+            >
+              <option value="">Date</option>
+              <option value="This Week">This Week</option>
+              <option value="This Month">This Month</option>
+              <option value="Recently Added">Recently Added</option>
+            </select>
+          </div>
         </div>
 
+        <div className="mt-5 sort">
+          <p className='ml-1 font-sans font-bold'>Sort by</p>
+          <div className='mt-3'>
+            <select
+              className="border border-gray-300 p-2 rounded-lg"
+              onChange={(e) => setSort({ ...sort, fee: e.target.value })}
+            >
+              <option value="none">Sort by Fee</option>
+              <option value="ascending">Ascending</option>
+              <option value="descending">Descending</option>
+            </select>
+            <select
+              className="ml-3 border border-gray-300 p-2 rounded-lg"
+              onChange={(e) => setSort({ ...sort, title: e.target.value })}
+            >
+              <option value="none">Sort by Title</option>
+              <option value="asc">A-Z</option>
+              <option value="desc">Z-A</option>
+            </select>
+          </div>
+        </div>
       </div>
-    </>
-  )
+
+      <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-28">
+        {currentCards.map(card => (
+          <div key={card._id} className="p-1 w-[320px] h-[400px] bg-white shadow-2xl border rounded-xl relative card flex flex-col">
+            <div className="relative w-full h-[190px] rounded-[0.7rem] rounded-tr-[4rem] mb-4 image-container">
+              <img src={card.coverImage.url} alt="" />
+              <div className="price">{card.fee}</div>
+            </div>
+
+            <div className="content flex-grow">
+              <div className="w-72 truncate brand">{card.title}</div>
+              {/* <div className="product-name">{card.description}</div> */}
+              <div className="product-name">{truncateText(card.description, 200)}</div>
+            </div>
+
+            <div className="button-container mt-auto">
+              <button onClick={() => handleViewDetails(card._id)} className="buy-button button">Book Now</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="m-20 button-container">
+        <button
+          className="button-3d"
+          onClick={prevPage}
+          disabled={currentPage === 1}
+        >
+          <div className="button-top">
+            <span className="material-icons">❮</span>
+          </div>
+          <div className="button-bottom"></div>
+          <div className="button-base"></div>
+        </button>
+
+        <span className="font-serif mt-5 px-4 py-2">{`Page ${currentPage} of ${totalPages}`}</span>
+
+        <button
+          className="button-3d"
+          onClick={nextPage}
+          disabled={currentPage === totalPages}
+        >
+          <div className="button-top">
+            <span className="material-icons">❯</span>
+          </div>
+          <div className="button-bottom"></div>
+          <div className="button-base"></div>
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default AllSessions;

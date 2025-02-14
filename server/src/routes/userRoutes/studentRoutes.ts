@@ -1,15 +1,16 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { updateProfile, sessions, session, getProfile, 
-        fetchNotifications, createBookingAndPayment, 
-        switchUserRole, bookedSessions, cancelBooking, 
-        searchSessions, sessionHistory,pendingSessions, 
-        rateInstructor, completeSessionAndRateInstructor, 
-        createMessage, 
-        fetchChat,
-        fetchNavbarChatList} from '../../controllers/studentController';
+import multer from 'multer';
 import { verifyToken } from '../../middleware/verifyUserToken';
 import { checkUserRole } from '../../middleware/checkUserRole';
-import multer from 'multer';
+import { bookedSessions, cancelBooking, commentPost, completeSessionAndRateInstructor, 
+    createBookingAndPayment, fetchNotifications, getFeedPosts, getInstructorProfile, getInstructors, getProfile, isSessionInWishlist, 
+    likePost, pendingSessions, rateInstructor, removeFromwishlist, searchSessions, session, 
+    sessionHistory, sessions, switchUserRole, toggleWishlist, updateProfile, 
+    wishlistSessions} from '../../controllers/studentController';
+import { accessChat, addToGroup, aiRating, allMessages, allUsers, changePassword, createAiChat, createGroupChat, fetchAiChatlist, fetchChats, fetchSingleAiChat, removeFromGroup, renameGroup, sendMessage, updateExistingAiChat } from '../../controllers/sharedController';
+
+
+
 
 const router = express.Router();
 
@@ -22,12 +23,14 @@ const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => P
     };
 };
 
-/* STUDENT HOME */
+router.get('/profile', verifyToken, checkUserRole('student'), asyncHandler(getProfile));
+
+
 router.get('/sessions', verifyToken, checkUserRole('student'), asyncHandler(sessions));
+
 router.get('/session/:id', verifyToken, checkUserRole('student'), asyncHandler(session));
 
 router.put('/update-profile', verifyToken, checkUserRole('student'), upload.single('profilePic'), asyncHandler(updateProfile));  // profilePic - should matches the field name in  frontend
-router.get('/profile', verifyToken, checkUserRole('student'), asyncHandler(getProfile));  
 
 router.post('/book-and-pay', verifyToken, checkUserRole('student'), asyncHandler(createBookingAndPayment));  
 
@@ -49,27 +52,56 @@ router.post('/session-complete/rating', verifyToken, checkUserRole('student'), a
 
 router.get('/notifications', verifyToken, checkUserRole('student'), asyncHandler(fetchNotifications)); 
 
-router.post('/chat', verifyToken, checkUserRole('student'), asyncHandler(createMessage)); 
-
-router.get('/chat', verifyToken, checkUserRole('student'), asyncHandler(fetchChat)); 
-
-router.get('/chat-list', verifyToken, checkUserRole('student'), asyncHandler(fetchNavbarChatList)); 
 
 
 
 
 
+router.get('/chat', verifyToken, checkUserRole('student'), asyncHandler(fetchChats));  //fetch a all chats and their details
+router.get('/chat/all-users', verifyToken, checkUserRole('student'), asyncHandler(allUsers));  //search users to chat
+router.post('/chat/access', verifyToken, checkUserRole('student'), asyncHandler(accessChat));  //header search, select a specific user to chat from the search, 
+
+router.post('/message', verifyToken, checkUserRole('student'), asyncHandler(sendMessage)); //to send or create a message
+router.get('/message/:chatId', verifyToken, checkUserRole('student'), asyncHandler(allMessages));   //fetch all messages of single chat
+
+router.post('/chat/new-group', verifyToken, checkUserRole('student'), asyncHandler(createGroupChat)); 
+router.put('/chat/rename', verifyToken, checkUserRole('student'), asyncHandler(renameGroup)); 
+router.put('/chat/group-add', verifyToken, checkUserRole('student'), asyncHandler(addToGroup)); 
+router.put('/chat/remove-user', verifyToken, checkUserRole('student'), asyncHandler(removeFromGroup)); 
+
+
+
+router.get('/posts', verifyToken, checkUserRole('student'), asyncHandler(getFeedPosts)); 
+router.patch('/post/:postId/like', verifyToken, checkUserRole('student'), asyncHandler(likePost)); 
+router.post('/post/comment/:postId', verifyToken, checkUserRole('student'), asyncHandler(commentPost)); 
 
 
 
 
+router.post('/ai/chat', verifyToken, checkUserRole('student'), asyncHandler(createAiChat)); 
+router.get('/ai/userchats', verifyToken, checkUserRole('student'), asyncHandler(fetchAiChatlist)); 
+router.get('/ai/chat/:id', verifyToken, checkUserRole('student'), asyncHandler(fetchSingleAiChat));
+router.put('/ai/chat/:id', verifyToken, checkUserRole('student'), asyncHandler(updateExistingAiChat)); 
 
 
 
 
+router.put('/change-password', verifyToken, checkUserRole('student'), asyncHandler(changePassword)); 
+
+router.patch('/wishlist', verifyToken, checkUserRole('student'), asyncHandler(toggleWishlist)); 
+router.get('/wishlist/check/:sessionId', verifyToken, checkUserRole('student'), asyncHandler(isSessionInWishlist)); 
+router.patch('/wishlist/:sessionId', verifyToken, checkUserRole('student'), asyncHandler(removeFromwishlist)); 
 
 
+router.get('/wishlist/sessions', verifyToken, checkUserRole('student'), asyncHandler(wishlistSessions)); 
 
+
+router.post('/ai/rating', verifyToken, checkUserRole('student'), asyncHandler(aiRating)); 
+
+
+router.get('/instructors', verifyToken, checkUserRole('student'), asyncHandler(getInstructors)); 
+
+router.get('/view-profile/:instId', verifyToken, checkUserRole('student'), asyncHandler(getInstructorProfile)); 
 
 
 

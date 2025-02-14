@@ -1,8 +1,8 @@
-import { BitcoinIconsArrowLeftFilled} from '../../assets/usersIcons/ProfileIcon';
+import { BitcoinIconsArrowLeftFilled} from '../../assets/userIcons/ProfileIcon';
 import { FaCamera } from 'react-icons/fa';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
-import axiosInstance from '../../utils/users/axiosInstance'
+import axiosInstance from '../../utils/user/axiosInstance'
 
 
 

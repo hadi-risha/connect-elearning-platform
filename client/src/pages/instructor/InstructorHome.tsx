@@ -31,7 +31,7 @@ import instructor12 from "../../assets/userImgs/instructor12.jpeg";
 import instructor13 from "../../assets/userImgs/instructor13.jpeg";
 import instructor14 from "../../assets/userImgs/instructor14.jpeg";
 import instructor15 from "../../assets/userImgs/instructor15.jpeg";
-import { GrommetIconsFacebookOption, FeTwitter, FlowbiteLinkedinSolid } from "../../assets/usersIcons/FooterIcons";
+import { GrommetIconsFacebookOption, FeTwitter, FlowbiteLinkedinSolid } from "../../assets/userIcons/FooterIcons";
 import { useNavigate } from "react-router-dom";
 
 // import {}

@@ -1,4 +1,4 @@
-import { IAdmin, IAdminRepository } from '../interfaces/adminInterface';
+import { IAdmin, IAdminRepository } from '../interfaces/adminRepoInterface';
 import { Admin } from '../models/adminModel';
 import { INotification, NotificationModel } from '../models/notificationModel';
 import { IUser, UserModel } from '../models/userModel';

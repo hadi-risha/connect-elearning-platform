@@ -1,4 +1,4 @@
-import { IUser, IUserRepository } from '../interfaces/userInterface';
+import { IUser, IUserRepository } from '../interfaces/userRepoInterface';
 import { UserModel } from '../models/userModel';
 import { ISession, SessionModel } from '../models/sessionModel';
 import { BookingModel, IBooking } from '../models/bookingModel';
@@ -7,6 +7,7 @@ import { IRating, RatingModel } from '../models/ratingModel';
 import { INotification, NotificationModel } from '../models/notificationModel';
 import { ChatModel, IChat } from '../models/chatModel';
 import { IMessage, MessageModel } from '../models/messageModel';
+import { IPost, PostModel } from '../models/postModel';
 
 
 
@@ -15,19 +16,17 @@ import { IMessage, MessageModel } from '../models/messageModel';
 
 export class UserRepository implements IUserRepository {
 
+    // ***
     async createUser(userData: Partial<IUser>): Promise<IUser> {
         try {
-            console.log("in create user repository");
-            
             const newUser = new UserModel(userData); 
-            console.log("newUser:- ", newUser);
-            
             return await newUser.save();  
         } catch (error) {
             throw new Error(`Error creating user: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
+    // ***
     async findUserByEmail(email: string): Promise<IUser | null> {
         try {
             return await UserModel.findOne({ email });
@@ -36,14 +35,7 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-    async findUserByGoogleId(googleId: string): Promise<IUser | null> {
-        try {
-            return await UserModel.findOne({ googleId });
-        } catch (error) {
-            throw new Error(`Error finding user by Google ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-
+    // ***
     async findUserById(id: string): Promise<IUser | null> {
         try {
             return await UserModel.findById(id);
@@ -52,6 +44,7 @@ export class UserRepository implements IUserRepository {
         }
     }
 
+    // ***
     async updateUserVerification(email: string): Promise<IUser | null> {
         try {
             return await UserModel.findOneAndUpdate(
@@ -64,6 +57,7 @@ export class UserRepository implements IUserRepository {
         }
     }
 
+    // ***
     async findUserByResetToken(token: string): Promise<IUser | null> {
         try {
             const user = await UserModel.findOne({ resetPasswordToken: token });
@@ -83,7 +77,15 @@ export class UserRepository implements IUserRepository {
         }
     }
 
+    // async findUserByGoogleId(googleId: string): Promise<IUser | null> {
+    //     try {
+    //         return await UserModel.findOne({ googleId });
+    //     } catch (error) {
+    //         throw new Error(`Error finding user by Google ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    //     }
+    // }
 
+    
 
     async updateUserDetails(profileData: IUser): Promise<IUser> {
         try {
@@ -124,7 +126,7 @@ export class UserRepository implements IUserRepository {
             return await SessionModel.findById(id)
             .populate({
                 path: 'instructorId',
-                select: '_id firstName lastName image.url', // Only fetch the required fields
+                select: '_id firstName lastName image.url', 
             });
         } catch (error) {
             throw new Error(`Error finding session by ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -182,7 +184,7 @@ export class UserRepository implements IUserRepository {
             .sort({ createdAt: -1 })
             .populate({
                 path: 'instructorId',
-                select: 'firstName lastName', // Only fetch the required fields
+                select: 'firstName lastName', 
             });
         } catch (error) {
             throw new Error(`Failed to fetch sessions: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -207,15 +209,15 @@ export class UserRepository implements IUserRepository {
 
     async bookedSessions(studentId: string): Promise<IBooking[] | null> {
         try {
-            return await BookingModel.find({ studentId }) // Ensure `studentId` is passed as an object
-            .sort({ createdAt: -1 }) // Sort bookings by creation date, descending
+            return await BookingModel.find({ studentId }) 
+            .sort({ createdAt: -1 }) 
             .populate({
-                path: 'instructorId', // Populate instructor details
-                select: 'firstName lastName email', // Fetch only necessary fields
+                path: 'instructorId', 
+                select: 'firstName lastName email', 
             })
             .populate({
-                path: 'sessionId', // Populate session details
-                select: '_id title duration fee descriptionTitle coverImage.url', // Fetch required fields
+                path: 'sessionId', 
+                select: '_id title duration fee descriptionTitle coverImage.url', 
             });
 
         } catch (error) {
@@ -230,19 +232,19 @@ export class UserRepository implements IUserRepository {
 
     async instructorBookedSessions(id: string): Promise<IBooking[] | null> {
         try {
-            return await BookingModel.find({ instructorId: id }) // Ensure `studentId` is passed as an object
-            .sort({ createdAt: -1 }) // Sort bookings by creation date, descending
+            return await BookingModel.find({ instructorId: id }) 
+            .sort({ createdAt: -1 }) 
             .populate({
-                path: 'studentId', // Populate instructor details
-                select: '_id firstName lastName email', // Fetch only necessary fields
+                path: 'studentId', 
+                select: '_id firstName lastName email image.url', 
             })
             .populate({
-                path: 'instructorId', // Populate instructor details
-                select: 'firstName lastName email', // Fetch only necessary fields
+                path: 'instructorId', 
+                select: 'firstName lastName email', 
             })
             .populate({
-                path: 'sessionId', // Populate session details
-                select: '_id title duration fee descriptionTitle', // Fetch required fields
+                path: 'sessionId', 
+                select: '_id title duration fee descriptionTitle coverImage.url', 
             });
 
         } catch (error) {
@@ -418,16 +420,16 @@ export class UserRepository implements IUserRepository {
         try {
             return await BookingModel.find({ 
                 userId, 
-                status: { $in: ['completed', 'cancelled'] }  // Filter by completed or cancelled status
+                status: { $in: ['completed', 'cancelled'] }  
             })
-            .sort({ createdAt: -1 }) // Sort bookings by creation date, descending
+            .sort({ createdAt: -1 }) 
             .populate({
-                path: 'instructorId', // Populate instructor details
-                select: 'firstName lastName email', // Fetch only necessary fields
+                path: 'instructorId', 
+                select: 'firstName lastName email', 
             })
             .populate({
-                path: 'sessionId', // Populate session details
-                select: '_id title duration fee descriptionTitle coverImage.url', // Fetch required fields
+                path: 'sessionId', 
+                select: '_id title duration fee descriptionTitle coverImage.url', 
             });
         } catch (error) {
             throw new Error(`Failed to fetch bookings: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -438,16 +440,16 @@ export class UserRepository implements IUserRepository {
         try {
             return await BookingModel.find({ 
                 instructorId: userId, 
-                status: { $in: ['completed', 'cancelled'] }  // Filter by completed or cancelled status
+                status: { $in: ['completed', 'cancelled'] }  
             })
-            .sort({ createdAt: -1 }) // Sort bookings by creation date, descending
+            .sort({ createdAt: -1 }) 
             .populate({
-                path: 'studentId', // Populate instructor details
-                select: 'firstName lastName email', // Fetch only necessary fields
+                path: 'studentId', 
+                select: 'firstName lastName email', 
             })
             .populate({
-                path: 'sessionId', // Populate session details
-                select: '_id title duration fee descriptionTitle coverImage.url', // Fetch required fields
+                path: 'sessionId', 
+                select: '_id title duration fee descriptionTitle coverImage.url', 
             });
         } catch (error) {
             throw new Error(`Failed to fetch bookings: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -461,15 +463,15 @@ export class UserRepository implements IUserRepository {
             return await BookingModel.find({ 
                 studentId,
                 status: { $in: ['booked'] } 
-             }) // Ensure `studentId` is passed as an object
-            .sort({ createdAt: -1 }) // Sort bookings by creation date, descending
+             }) 
+            .sort({ createdAt: -1 }) 
             .populate({
-                path: 'instructorId', // Populate instructor details
-                select: 'firstName lastName email', // Fetch only necessary fields
+                path: 'instructorId', 
+                select: 'firstName lastName email', 
             })
             .populate({
-                path: 'sessionId', // Populate session details
-                select: '_id title duration fee descriptionTitle coverImage.url', // Fetch required fields
+                path: 'sessionId', 
+                select: '_id title duration fee descriptionTitle coverImage.url', 
             });
 
         } catch (error) {
@@ -482,7 +484,7 @@ export class UserRepository implements IUserRepository {
     async rateInstructor( ratingData: Partial<IRating> ): Promise<IRating | null> {
         try {
             const response = new RatingModel({
-                ratedBy: ratingData.ratedBy,  // Ensure that 'id' is set for ratedBy
+                ratedBy: ratingData.ratedBy, 
                 ratedUser: ratingData.ratedUser,
                 rating: ratingData.rating,
                 feedback: ratingData.feedback,
@@ -522,126 +524,65 @@ export class UserRepository implements IUserRepository {
     }
 
 
-    
-    
 
-    async findChatWithUserIds(id: string, chatPartnerId: string): Promise<IChat | null> {
+
+    async createPost(postData: Partial<IPost>): Promise<IPost | null> {
         try {
-            return await ChatModel.findOne({
-              usersId: { $all: [id, chatPartnerId] },
-            })
-            //.populate("usersId", "name email") // Optionally populate user details
+            console.log("in create post repository");
+            
+            const newPost = new PostModel(postData); 
+            console.log("newPost:- ", newPost);
+            
+            return await newPost.save();  
+        } catch (error) {
+            throw new Error(`Error creating post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+
+
+
+    async fetchPosts(): Promise<IPost[] | null> {
+        try {
+            return await PostModel.find()
+            .sort({ createdAt: -1 })
             .populate({
-                path: "usersId",
-                match: { _id: { $ne: id } },
-                select: "_id firstName lastName role image.url", // Populate user details
-            })
+                path: 'instructorId',
+                select: '_id firstName lastName role country image.url', 
+            });
+        } catch (error) {
+            throw new Error(`Failed to fetch posts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+
+    async findPostById(id: string): Promise<IPost | null> {
+        try {
+            return await PostModel.findById(id)
             .populate({
-                path: "messageIds",
-                options: { sort: { timestamp: 1 } }, // Ensure messages are sorted by timestamp
-            })
-            .populate({
-                path: "lastMessageId",
-                select: "_id content timestamp seen senderId", // Populate the last message
+                path: 'instructorId',
+                select: '_id firstName lastName role country image.url',
             });
-
         } catch (error) {
-            throw new Error(`Failed to fetch chat: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw new Error(`Error finding post by ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
 
-    async createMessage( messageData: Partial<IMessage> ): Promise<IMessage | null> {
+
+    async updatePostById(id: string, newLikes: Record<string, boolean>): Promise<IPost | null> {
         try {
-            const response = new MessageModel({
-                senderId: messageData.senderId, 
-                receiverId: messageData.receiverId,
-                content: messageData.content,
-            });
-
-            await response.save();
-            return response;
+            return await PostModel.findByIdAndUpdate(
+                id,
+                {likes: newLikes}, 
+                { new: true }  
+            ); 
         } catch (error) {
-            throw new Error(`Error creating message: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-
-    async createChat( chatData: Partial<IChat> ): Promise<IChat | null> {
-        try {
-            const response = new ChatModel({
-                usersId: chatData.usersId, 
-                messageIds: chatData.messageIds, 
-                lastMessageId: chatData.lastMessageId,
-                unreadCounts: chatData.unreadCounts
-            });
-
-            await response.save();
-            return response;
-        } catch (error) {
-            throw new Error(`Error creating chat: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-
-    async updateChatMessages( chatId: string, updateChatData: Partial<IChat> ): Promise<IChat | null> {
-        try {
-            return await ChatModel.findOneAndUpdate(
-                { _id: chatId },
-                {
-                  $set: {
-                    lastMessageId: updateChatData.lastMessageId,
-                    unreadCounts: updateChatData.unreadCounts,
-                  },
-                  $push: { messageIds: { $each: updateChatData.messageIds || [] } },
-                },
-                { new: true }
-              );
-        } catch (error) {
-            throw new Error(`Error updating chat: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Error finding post by ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
 
 
-
-    async fetchMessages(messageIds: string[]): Promise<IMessage[] | null> {
-        try {
-          return await MessageModel.find({ _id: { $in: messageIds } })
-            .sort({ timestamp: 1 }) // Sort messages by `timestamp` in ascending order
-            .populate("senderId", "name email") // Populate sender details
-            .populate("receiverId", "name email"); // Populate receiver details
-        } catch (error) {
-          throw new Error(`Failed to fetch messages: ${error instanceof Error ? error.message : "Unknown error"}`);
-        }
-    }
-
-
-
-
-
-
-    async fetchInteractedUsersList(currentUserId: string): Promise<IChat[] | null> {
-        try {
-            return await ChatModel.find({
-                usersId: { $in: [currentUserId] }, // Include chats where the current user is a participant
-                })
-                .sort({ updatedAt: -1 }) // Sort by the latest activity
-                .populate({
-                    path: "usersId",
-                    match: { _id: { $ne: currentUserId } },
-                    select: "_id firstName lastName role image.url", // Populate user details
-                })
-                .populate({
-                    path: "lastMessageId",
-                    select: "_id content timestamp seen senderId", // Populate the last message
-                });
-        } catch (error) {
-            throw new Error(
-                `Failed to fetch messages: ${
-                    error instanceof Error ? error.message : "Unknown error"
-                }`
-            );
-        }
-    }
-    
 
 }

@@ -32,12 +32,17 @@ router.get('/notifications', adminAuthMiddleware, asyncHandler(adminController.g
 router.get('/notification/:id', adminAuthMiddleware, asyncHandler(adminController.getNotification.bind(adminController)) ); //single notification
 
 
+router.get('/ai-rating', adminAuthMiddleware, asyncHandler(adminController.getAiRatings.bind(adminController)) ); //single notification
 
 
+router.get('/community-chat', adminAuthMiddleware, asyncHandler(adminController.getCommunities.bind(adminController)) ); //single notification
+
+router.delete('/community/:groupId', adminAuthMiddleware, asyncHandler(adminController.deleteCommunity.bind(adminController)) ); //single notification
+
+router.delete('/community/:groupId/user/:userId', adminAuthMiddleware, asyncHandler(adminController.removeUserFromCommunity.bind(adminController)) ); //single notification
 
 
-
-
+router.get('/dashboard/stats', adminAuthMiddleware, asyncHandler(adminController.dashboard.bind(adminController)) ); //single notification
 
 
 

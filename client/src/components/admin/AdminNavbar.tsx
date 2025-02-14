@@ -40,13 +40,15 @@ const AdminNavbar = () => {
         activateItem = 'notificationManagement';
     } else if (location.pathname.includes('update-notification')) {
         activateItem = 'notificationManagement';
+    } else if (location.pathname.includes('ai-management')) {
+        activateItem = 'aiManagement';
     }
    
 
 
     return (
         <div className="">
-            <div className='bg-navy-blue w-80 h-screen'>
+            <div className='bg-navy-blue w-80 h-[1200px]'>
                 <div className="space-y-11 pt-2">
 
                     <div className='flex items-center ml-12'>
@@ -178,7 +180,7 @@ const AdminNavbar = () => {
 
 
 
-                        <div>
+                        {/* <div>
                             {
                                 activateItem == 'reportingAnalytics' ? (
                                     <>
@@ -212,7 +214,7 @@ const AdminNavbar = () => {
                                     </>
                                 )
                             }
-                        </div>
+                        </div> */}
 
 
 

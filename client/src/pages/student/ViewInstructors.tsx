@@ -1,51 +1,11 @@
-import homeBg from "../../assets/userImgs/homeBg.png";
-import std1 from "../../assets/userImgs/std1.png";
-import std2 from "../../assets/userImgs/std2.png";
-import std3 from "../../assets/userImgs/std3.png";
-import std4 from "../../assets/userImgs/std4.png";
-import std5 from "../../assets/userImgs/std5.png";
-import std6 from "../../assets/userImgs/std6.png";
-import std7 from "../../assets/userImgs/std7.png";
-
-
-import biology from "../../assets/userImgs/biology.png";
-import statistics from "../../assets/userImgs/statistics.png";
-import publicSpeaking from "../../assets/userImgs/publicSpeaking.png";
-
-
-import std8 from "../../assets/userImgs/std8.png";
-import std9 from "../../assets/userImgs/std9.png";
-
-import instructor from "../../assets/userImgs/instructor.png";
-import instructor2 from "../../assets/userImgs/instructor2.png";
-import instructor3 from "../../assets/userImgs/instructor3.png";
-import instructo4 from "../../assets/userImgs/instructor4.png";
-import instructor5 from "../../assets/userImgs/instructor5.png";
-import instructor6 from "../../assets/userImgs/instructor6.jpeg";
-import instructor7 from "../../assets/userImgs/instructor7.jpeg";
-import instructor8 from "../../assets/userImgs/instructor8.jpeg";
-import instructor9 from "../../assets/userImgs/instructor9.jpeg";
-import instructor10 from "../../assets/userImgs/instructor10.jpeg";
-import instructor11 from "../../assets/userImgs/instructor11.jpeg";
-import instructor12 from "../../assets/userImgs/instructor12.jpeg";
-import instructor13 from "../../assets/userImgs/instructor13.jpeg";
-import instructor14 from "../../assets/userImgs/instructor14.jpeg";
-import instructor15 from "../../assets/userImgs/instructor15.jpeg";
-import { GrommetIconsFacebookOption, FeTwitter, FlowbiteLinkedinSolid } from "../../assets/usersIcons/FooterIcons";
-import { CarbonLocationFilled, GameIconsGraduateCap } from "../../assets/usersIcons/ProfileIcons";
-
-// import {}
-
-
-
-
-
-
-
-
-
-
-
+import instructor8 from "../../assets/userImages/instructor8.jpeg";
+import instructor9 from "../../assets/userImages/instructor9.jpeg";
+import instructor13 from "../../assets/userImages/instructor13.jpeg";
+import { GrommetIconsFacebookOption, FeTwitter, FlowbiteLinkedinSolid } from "../../assets/userIcons/FooterIcons";
+import { CarbonLocationFilled, GameIconsGraduateCap } from "../../assets/userIcons/ProfileIcons";
+import axiosInstance from "../../utils/user/axiosInstance";
+import { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -54,9 +14,36 @@ const style = {
   animation: `slide 20s linear infinite`
 };
 
+interface IInstructor {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    education: string;
+    teachingViews: string;
+    country: string;
+    image: string;
+    sessionCount: number;
+}
+
+
+
 const ViewInstructors = () => {
+    const navigate = useNavigate();
+     const [instructors, setInstructors] = useState<IInstructor[]>([]);  
 
-
+    useEffect(() => {
+        async function fetchInstructors() {
+          try {
+            const res = await axiosInstance.get(`/student/instructors`);
+            console.log("view instructors----111",res.data);
+            console.log("view instructors----22",res.data.instructors);
+            setInstructors(res.data.instructors)
+          } catch (error) {
+            console.error("Error fetching instructors:", error);
+          }
+        }
+        fetchInstructors();
+    }, []);
 
   return (
     <div className='w-full h-auto overflow-x-hidden'>
@@ -84,142 +71,64 @@ const ViewInstructors = () => {
             {/* all mentors */}
             <div className="ml-32 mt-64 space-y-16">
 
-                {/* mentor-1 */}
-                <div className="flex space-x-6">
 
-                    {/*    left side-instructor img    */}
-                    <div className=' relative w-[330px] h-[430px] rounded-2xl border-2 border-black group hover:rounded-full transition-all duration-300'>
-                        <div 
-                            className='w-full h-full rounded-2xl group-hover:rounded-full transition-all duration-300' 
-                            style={{ backgroundImage: `url(${instructor8})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                        </div>
-                        <div className='absolute flex bottom-10 left-0 w-full bg-opacity-60 py-4 px-7 text-white rounded-b-2xl space-x-6'>
-                            <button className='ml-20 py-1 px-4 h-12 bg-[#c291fe] text-white border border-white rounded-full transition duration-300 transform hover:scale-105 active:scale-95'>
-                                View Profile
-                            </button>
-                        </div>
-                    </div>
-
-                    {/*    right side-instructor details    */}
-                    <div className="mt-10 h-[50vh] w-6/12">
-                        <div className="h-full pl-14">
-                            <p className='mt-7 mb-3 text-2xl font-serif text-black'>
-                                Jaxon Clarke
-                            </p>
-                            <div className="mt-7 flex space-x-4">
-                                <GameIconsGraduateCap />
-                                <p className=' mb-3 text-lg font-serif text-black'> 
-                                    English Language
-                                </p>
+                
+                {instructors.map((user, index) => (
+                    <div key={user._id}>
+                        <div className="flex space-x-6">
+                            {/* Left Side - Instructor Image */}
+                            <div className='relative w-[330px] h-[430px] rounded-2xl border-2 border-black group hover:rounded-full transition-all duration-300'>
+                                <div 
+                                    className='w-full h-full rounded-2xl group-hover:rounded-full transition-all duration-300' 
+                                    style={{ backgroundImage: `url(${user.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                                </div>
+                                <div className='absolute flex bottom-10 left-0 w-full bg-opacity-60 py-4 px-7 text-white rounded-b-2xl space-x-6'>
+                                    <button 
+                                        className='ml-20 py-1 px-4 h-12 bg-[#c291fe] text-white border border-white rounded-full transition duration-300 transform hover:scale-105 active:scale-95'
+                                        onClick={() => navigate(`/student/instructor/profile/${user._id}`)}
+                                    >
+                                        View Profile
+                                    </button>
+                                </div>
                             </div>
-                            <p className='w-10/12 text-black'>
-                                Native English Teacher from the U.S. consectetur adipisicing elit, sed do eiusmod ut labore et magna aliqua
-                            </p>
-                            <div className="mt-7 flex space-x-4">
-                                <CarbonLocationFilled />
-                                <p className=' mb-3 text-lg font-serif text-black'> 
-                                    Berlin, Germany
-                                </p>
+
+                            {/* Right Side - Instructor Details */}
+                            <div className="mt-10 h-[50vh] w-6/12">
+                                <div className="h-full pl-14">
+                                    <p className='mt-7 mb-3 text-2xl font-serif text-black'>
+                                        {user.firstName} {user.lastName}
+                                    </p>
+                                    <div className="mt-7 flex space-x-4">
+                                        <GameIconsGraduateCap />
+                                        <p className='mb-3 text-lg font-serif text-black'> 
+                                            {user.education}
+                                        </p>
+                                    </div>
+                                    <p className='w-10/12 text-black'>
+                                        {user.teachingViews}
+                                    </p>
+                                    <div className="mt-7 flex space-x-4">
+                                        <CarbonLocationFilled />
+                                        <p className='mb-3 text-lg font-serif text-black'> 
+                                            {user.country}
+                                        </p>
+                                    </div>
+                                    <p className='mt-2 text-sm w-10/12 font-sans text-gray-500'>
+                                        {user.sessionCount} Sessions
+                                    </p>
+                                </div>
                             </div>
-                            <p className='mt-2 text-sm w-10/12 font-sans text-gray-500'>
-                                125 Sessions
-                            </p>
                         </div>
+                        
+                        {/* Show the horizontal line only if it's NOT the last instructor */}
+                        {index !== instructors.length - 1 && <hr className="mt-16 border-black mr-64" />}
                     </div>
-                </div>
-                <hr className=" border-black  mr-64" />
+                ))}
 
 
-                {/* mentor-2 */}
-                <div className="flex space-x-6">
-
-                    {/*    left side-instructor img    */}
-                    <div className=' relative w-[330px] h-[430px] rounded-2xl border-2 border-black group hover:rounded-full transition-all duration-300'>
-                        <div 
-                            className='w-full h-full rounded-2xl group-hover:rounded-full transition-all duration-300' 
-                            style={{ backgroundImage: `url(${instructor13})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                        </div>
-                        <div className='absolute flex bottom-10 left-0 w-full bg-opacity-60 py-4 px-7 text-white rounded-b-2xl space-x-6'>
-                            <button className='ml-20 py-1 px-4 h-12 bg-[#c291fe] text-white border border-white rounded-full transition duration-300 transform hover:scale-105 active:scale-95'>
-                                View Profile
-                            </button>
-                        </div>
-                    </div>
-
-                    {/*    right side-instructor details    */}
-                    <div className="mt-10 h-[50vh] w-6/12">
-                        <div className="h-full pl-14">
-                            <p className='mt-7 mb-3 text-2xl font-serif text-black'>
-                                Jaxon Clarke
-                            </p>
-                            <div className="mt-7 flex space-x-4">
-                                <GameIconsGraduateCap />
-                                <p className=' mb-3 text-lg font-serif text-black'> 
-                                    English Language
-                                </p>
-                            </div>
-                            <p className='w-10/12 text-black'>
-                                Native English Teacher from the U.S. consectetur adipisicing elit, sed do eiusmod ut labore et magna aliqua
-                            </p>
-                            <div className="mt-7 flex space-x-4">
-                                <CarbonLocationFilled />
-                                <p className=' mb-3 text-lg font-serif text-black'> 
-                                    Berlin, Germany
-                                </p>
-                            </div>
-                            <p className='mt-2 text-sm w-10/12 font-sans text-gray-500'>
-                                125 Sessions
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <hr className=" border-black  mr-64" />
 
 
-                {/* mentor-3 */}
-                <div className="flex space-x-6">
-
-                    {/*    left side-instructor img    */}
-                    <div className=' relative w-[330px] h-[430px] rounded-2xl border-2 border-black group hover:rounded-full transition-all duration-300'>
-                        <div 
-                            className='w-full h-full rounded-2xl group-hover:rounded-full transition-all duration-300' 
-                            style={{ backgroundImage: `url(${instructor9})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                        </div>
-                        <div className='absolute flex bottom-10 left-0 w-full bg-opacity-60 py-4 px-7 text-white rounded-b-2xl space-x-6'>
-                            <button className='ml-20 py-1 px-4 h-12 bg-[#c291fe] text-white border border-white rounded-full transition duration-300 transform hover:scale-105 active:scale-95'>
-                                View Profile
-                            </button>
-                        </div>
-                    </div>
-
-                    {/*    right side-instructor details    */}
-                    <div className="mt-10 h-[50vh] w-6/12">
-                        <div className="h-full pl-14">
-                            <p className='mt-7 mb-3 text-2xl font-serif text-black'>
-                                Jaxon Clarke
-                            </p>
-                            <div className="mt-7 flex space-x-4">
-                                <GameIconsGraduateCap />
-                                <p className=' mb-3 text-lg font-serif text-black'> 
-                                    English Language
-                                </p>
-                            </div>
-                            <p className='w-10/12 text-black'>
-                                Native English Teacher from the U.S. consectetur adipisicing elit, sed do eiusmod ut labore et magna aliqua
-                            </p>
-                            <div className="mt-7 flex space-x-4">
-                                <CarbonLocationFilled />
-                                <p className=' mb-3 text-lg font-serif text-black'> 
-                                    Berlin, Germany
-                                </p>
-                            </div>
-                            <p className='mt-2 text-sm w-10/12 font-sans text-gray-500'>
-                                125 Sessions
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <hr className=" border-black  mr-64" />
+         
 
             </div>
 

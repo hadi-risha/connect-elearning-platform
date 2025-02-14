@@ -51,14 +51,12 @@ router.get(
     (req: Request, res: Response) => {
         const user = req.user as CustomUser;
         const { role, isBlocked, isRoleChanged } = user;
-        console.log("role", role);
 
         const token = jwt.sign({ id: user._id, role: user.role, isBlocked: user.isBlocked, isRoleChanged: user.isRoleChanged, userDetails: user }, config.jwtSecret );
 
         console.log("redirect to ->", `${config.frontendUrl}/${role}/home`);
         const homePageUrl = `/${user.role}/home`;
 
-        
         res.redirect(`${config.frontendUrl}/login?token=${token}&role=${role}&isBlocked=${isBlocked}&isRoleChanged=${isRoleChanged}&userData=${user}`);
     }
 );  
@@ -76,14 +74,13 @@ router.use((req, res, next) => {
 router.get('/success', (req, res) => {
     console.log("req", req.user);
     if (req.user) {
-        console.log("Google Auth successful");
-        
         res.status(HttpStatus.OK).json({ message: 'Google Auth successful', user: req.user });
     } else {
         console.log("Not authenticated");
         res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Not authenticated' });
     }
 });
+
 
 
 

@@ -1,8 +1,8 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy, Profile } from 'passport-google-oauth20';
 import config from '../config/config';
-import { UserService } from '../services/userService';
-import { IUser } from '../interfaces/userInterface';
+import { UserService } from '../services/userRepoService';
+import { IUser } from '../interfaces/userRepoInterface';
 
 
 import { Strategy as OAuth2Strategy } from 'passport-google-oauth2'; 
@@ -19,7 +19,6 @@ passport.use(
 },
 async (accessToken: string, refreshToken: string, profile: Profile, done: (err: any, user?: any) => void) => {
 
-  console.log("profile", profile);
   try {
     const googleId = profile.id;
     const firstName = profile.name?.givenName || "";
@@ -32,16 +31,15 @@ async (accessToken: string, refreshToken: string, profile: Profile, done: (err: 
 
     // let user = await userRepository.findUserByGoogleid(profile.id);
     let user = await userService.findUserByEmail(email);
-    console.log("user already in db, check if verified or not", user);
+    // user already in db, check if verified or not
     if(user?.isVerified === false){
       user = await userService.updateUserVerification(email);
-      console.log("user: ", user);
+      console.log("user found");
     }
 
 
     if(!user){
-      console.log("the user not in db, create new user");
-      
+      // the user not in db, create new user
       user = { 
         googleId:profile.id,
         firstName,
@@ -50,51 +48,30 @@ async (accessToken: string, refreshToken: string, profile: Profile, done: (err: 
         role: 'student', 
         isVerified: true 
       } as IUser;
-      // user = {
-      //   googleId: profile.id,
-      //   firstName: firstName , // provide default values if undefined
-      //   lastName: lastName ,
-      //   email,
-      //   role: 'student',
-      //   isVerified: true,
-      //   resetPasswordToken: null,
-      //   resetPasswordExpiry: null,
-      // } as IUser;
       let response = await userService.createUser(user); 
-      console.log("user created in passport, response",response);
+      console.log("user created in passport");
       user = response
-      
-    }
-
-    console.log("user data after created or found in db==================================", user);
-    
-
-  return done(null,user)
+    }    
+    return done(null,user)
 
   } catch (error) {
-    console.log("error in passport 1",error);
-    
+    console.log("error in passport :- ",error);
+
     done(error, null);  
   }
 }));
 
 
 passport.serializeUser((user: any, done) => {
-  console.log("serializeUser, user   1...", user);
-
-  
-  // done(null, user.id);  
   done(null, user._id);
 });
 
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const user = await userService.findUserById(id); 
-    console.log("deserializeUser , user   2...", user);
-    
+    const user = await userService.findUserById(id);     
     done(null, user);
   } catch (error) {
-    console.log("error in passport 3...",error);
+    console.log("error in passport :- ",error);
     
     done(error, null);
   }

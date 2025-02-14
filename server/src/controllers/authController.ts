@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'; //*
 import bcrypt from 'bcryptjs'; //*
 import jwt from "jsonwebtoken"; //*
-import { UserService } from '../services/userService'; //*
+import { UserService } from '../services/userRepoService'; //*
 import { HttpStatus } from '../utils/httpStatusCodes';  //*
 import { generateOtp, verifyOtp } from '../utils/otpService'; //*
 import { sendOtpEmail } from '../utils/otpEmailService'; //*
@@ -55,9 +55,8 @@ export class AuthController {
             });
 
             const otp = generateOtp(email);
-            console.log("generate OTP and send email");
             await sendOtpEmail(email, otp);
-            console.log("otp mail sended");
+            console.log("otp mail sended", otp);
 
             return res.status(HttpStatus.OK).json({ message: 'Signup successful, please verify your OTP' });
         } catch (error: any) {
@@ -69,25 +68,12 @@ export class AuthController {
 
     /* VERIFY OTP */
     public async verifyUserOtp(req: Request, res: Response) {
-        console.log("Received OTP verification request:", req.body);
-        console.log("verify otp section", req.body.otp);
-        
         const { email, otp } = req.body;
     
-        console.log("typeof otp",typeof otp);
-        console.log("otp", otp);
         try {
-            console.log("verifyUserOtp try block");
-            
             if (verifyOtp(email, otp)) {
-                console.log("verifyUserOtp email, otp", email, otp);
                 const updatedUser = await this.userService.updateUserVerification(email);
-
-                console.log("updatedUser", updatedUser);
-                
-    
                 const existingUser = await this.userService.findUserByEmail(email);
-                console.log("existingUser in verify user", existingUser);
                 
                 if (!existingUser) {
                     return res.status(HttpStatus.BAD_REQUEST).json({ message: 'user doesnt exists' });
@@ -96,8 +82,7 @@ export class AuthController {
                 const userWithoutPassword = existingUser.toObject();  
                 delete userWithoutPassword.password; 
     
-                console.log("token, userData: userWithoutPassword", token, userWithoutPassword);
-                
+                console.log("token, userData without password", token, userWithoutPassword);
                 
                 return res.status(HttpStatus.OK).json({ message: 'OTP verified successfully', user: updatedUser, token, userData: userWithoutPassword });
             } else {
@@ -107,18 +92,11 @@ export class AuthController {
             console.error(error);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'error verifying OTP', error: error.message });
         }
-    
-
     }
 
     /* VERIFY ACCOUNT IN LOGIN */
     public async verifyNow(req: Request, res: Response): Promise<Response> {
-        console.log("verifyNow section server side");
-        
         const { email } = req.body;
-        console.log(email);
-        
-        console.log(email );
         try {
             const existingUser = await this.userService.findUserByEmail(email);
             if (!existingUser) {
@@ -126,28 +104,21 @@ export class AuthController {
             }
 
             const otp = generateOtp(email);
-            console.log("otp in verify now section", otp);
-            
-            console.log("generate OTP and send email");
             await sendOtpEmail(email, otp);
-            console.log("otp mail sended");
+            console.log("user login verify, otp mail sended", otp);
 
             return res.status(HttpStatus.OK).json({ message: 'verify now, otp send to email,please verify your OTP' });
         } catch (error:any) {
-            console.log("error in verify now server side");
-            
+            console.log("error in login verification");
             console.error(error);
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'error in verify now', error: error.message });
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'error in login verification', error: error.message });
         }
     };
 
 
     /* RESEND OTP */
     public async resendOTP(req: Request, res: Response): Promise<Response> {
-        console.log("resend otp section");
-        
         const { email } = req.body;
-        console.log(email);
         try {
             const existingUser = await this.userService.findUserByEmail(email);
             if (!existingUser) { 
@@ -160,10 +131,8 @@ export class AuthController {
 
             //generate OTP and send email
             const otp = generateOtp(email);
-            console.log("Generated OTP:", otp);
-
             await sendOtpEmail(email, otp);
-            console.log("OTP email sent successfully");
+            console.log("resend OTP email sent successfully", otp);
 
             return res.status(HttpStatus.OK).json({ message: 'OTP resent successfully, please verify your OTP.' });
         } catch (error: any) {
@@ -174,11 +143,8 @@ export class AuthController {
 
     /* LOGGING IN */
     public async login(req: Request, res: Response): Promise<Response> {
-        console.log("comes here in login page.");
-        
         try {
             const { email, password } = req.body;
-            console.log("login email, password", email, password);
             
             const existingUser = await this.userService.findUserByEmail(email);
             if (!existingUser) {
@@ -192,9 +158,8 @@ export class AuthController {
             }
 
             const isMatch = await bcrypt.compare(password, existingUser.password);
-            console.log("password match:", isMatch);
             if (!isMatch) {
-                console.log("invalid credentials/ psw");
+                console.log("invalid password");
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: "invalid credentials." });
             }
 
@@ -203,10 +168,6 @@ export class AuthController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: "Please verify your email to log in.", needsVerification: true  });
             }
 
-            console.log("user details in login", req.userData);
-            
-
-            // const token = jwt.sign({ id: existingUser._id, role: existingUser.role, userDetails: req.userData }, config.jwtSecret as string);
             const token = jwt.sign({ id: existingUser._id, role: existingUser.role, isBlocked: existingUser.isBlocked, isRoleChanged: existingUser.isRoleChanged, userDetails: req.userData }, config.jwtSecret as string);
 
             const userWithoutPassword = existingUser.toObject();  
@@ -214,20 +175,13 @@ export class AuthController {
 
             let homePageUrl = '';
             if (existingUser.role === 'student') {
-                console.log("redirect to --> student home");
                 homePageUrl = '/student/home';
             } else if (existingUser.role === 'instructor') {
-                console.log("redirect to --> instructor home");
                 homePageUrl = '/instructor/home';
             }
-
             console.log("redirect to -->", homePageUrl);
 
-            console.log("token, homePageUrl, userData: userWithoutPassword", token, homePageUrl, userWithoutPassword);
-            
-            // return res.status(HttpStatus.OK).json({ message: 'login successful', token, homePageUrl, userData: userWithoutPassword }); 
             return res.status(HttpStatus.OK).json({ message: 'login successful', token, role: existingUser.role, userData: userWithoutPassword });  
- 
         } catch (error: any) {
             console.error(error);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: error.message });
@@ -240,11 +194,10 @@ export class AuthController {
         const token = req.header("Authorization")?.split(" ")[1];
     
         if (token) {
-        res.clearCookie("token");
-    
-        return res.status(HttpStatus.OK).json({ message: "Logout successful" });
+            res.clearCookie("token");
+            return res.status(HttpStatus.OK).json({ message: "Logout successful" });
         } else {
-        return res.status(HttpStatus.BAD_REQUEST).json({ message: "No token found, cannot log out" });
+            return res.status(HttpStatus.BAD_REQUEST).json({ message: "No token found, cannot log out" });
         }
     };
 
@@ -258,7 +211,7 @@ export class AuthController {
                 return res.status(HttpStatus.NOT_FOUND).json({ message: 'Oops! That email isn’t registered with us.' });
             }
             const resetToken = generateResetPasswordToken();
-            console.log("pasw reset token ....", resetToken);
+            console.log("pasw reset token :- ", resetToken);
             
             user.resetPasswordToken = resetToken;
             // user.resetPasswordExpiry = new Date(Date.now() + 300000);   //expire after 5 minutes
@@ -266,76 +219,52 @@ export class AuthController {
     
             await user.save();
     
-            // const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;    
             const resetUrl = `${config.frontendUrl}/reset-password?token=${resetToken}`;   //frontend url
-
-    
             await sendForgotPasswordEmail(email, resetUrl);
+
             return res.status(HttpStatus.OK).json({ message: "Password reset email sent! Please check your email for the reset link." , resetToken});
-      } catch (error) {
+        } catch (error) {
             console.error(error);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'error in forgot-psw '});
-      }
+        }
     };
 
 
     /* RESET PSW  */
-    public async resetUserPassword(req: Request, res: Response) {
-        console.log("resetUserPassword s    Q   Aection");
-        
+    public async resetUserPassword(req: Request, res: Response) {        
         const { token } = req.params;
         const { password, confirmPassword } = req.body;
-    
-        console.log( "token.....", token );
-        console.log( "password, confirmPassword.....", password, confirmPassword );
-        console.log("1");
-        
     
         if (!password || !confirmPassword) {
             return res.status(HttpStatus.BAD_REQUEST).json({ message: 'All fields are required' });
         }
-        console.log("2");
     
         if (password !== confirmPassword) {
             return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Passwords do not match' });
         }
-        console.log("3");
         try {
             const user = await this.userService.findUserByResetToken(token);
-            console.log("4");
-            if (!user) {
-                console.log("4.5", user);
-                
+            if (!user) {                
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: "Invalid or expired token" });
             }
-            console.log("5");
             if (user === null) {
-                console.log("4.8", user);
-                console.log("invalid reset link");
-                
-                
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: "invalid reset link" });
             }
-    
-            console.log(`User ${user.email} found, resetting password`);                                                                                                                                                                                    
-    
+
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
     
             user.password = hashedPassword;
             user.resetPasswordToken = null; 
             user.resetPasswordExpiry = null;
-            console.log("6");
     
-            await user.save();
-            console.log("user saved");
-            console.log("7");
-            
+            await user.save();           
     
             res.status(HttpStatus.OK).json({ message: 'Password reset successful' });
-        } catch (err) {
-            console.log("8 err");
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Server error' });
+        } catch (error: any) {
+            console.log("error in reset user password");
+            console.error(error);
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: error.message });
         }
     };
 

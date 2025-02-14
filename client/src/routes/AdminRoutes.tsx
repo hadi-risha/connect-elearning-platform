@@ -1,17 +1,16 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import AdminHeader from "../components/admin/AdminHeader";
-import AdminNavbar from "../components/admin/AdminNavbar";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import UserManagement from "../pages/admin/UserManagement";
 import AccountTypeManagement from "../pages/admin/AcTypeManagement";
-import AdminLogin from "../pages/admin/AdminLogin";
-import ProtectedRoute from '../protectedRoute/ProtectedRoute';
 import NotificationManagement from "../pages/admin/NotificationManagement";
 import CreateNotification from "../pages/admin/CreateNotification";
 import UpdateNotification from "../pages/admin/UpdateNotification";
-import NewAdminSignup from "../pages/admin/NewAdminSignup";
-import NewAdminLogin from "../pages/admin/NewAdminLogin";
-import SuperAdminLogin from "../pages/superAdmin/Login";
+import AdminLogin from "../pages/admin/AdminLogin";
+import ProtectedRoute from "./ProtectedRoute";
+import AdminNavbar from "../components/admin/AdminNavbar";
+import AdminHeader from "../components/admin/AdminHeader";
+import AiRatings from "../pages/admin/AiManagement";
+import CommunityManagement from "../pages/admin/CommunityManagement";
 
 interface AdminRoutesProps {
   token: string | null;
@@ -46,6 +45,9 @@ function AdminRoutes({ token }: AdminRoutesProps) {
                 <Route path="/admin/create-notification" element={<ProtectedRoute><CreateNotification /></ProtectedRoute>} />
                 <Route path="/admin/update-notification/:notificationId" element={<ProtectedRoute><UpdateNotification /></ProtectedRoute>} />
 
+                <Route path="/admin/ai-management" element={<ProtectedRoute><AiRatings /></ProtectedRoute>} />
+                <Route path="/admin/community-management" element={<ProtectedRoute><CommunityManagement /></ProtectedRoute>} />
+
 
                 <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
               </Routes>
@@ -64,7 +66,7 @@ function AdminRoutes({ token }: AdminRoutesProps) {
           {/* <Route path="/admin/login" element={<NewAdminLogin />} />    */}  {/* new admin login  */}
           
 
-          <Route path="/admin/login" element={<SuperAdminLogin />} />  {/* super admin login  */}
+          <Route path="/admin/login" element={<AdminLogin />} />  {/* super admin login  */}
         </Routes>
       )}
     </>
@@ -72,6 +74,3 @@ function AdminRoutes({ token }: AdminRoutesProps) {
 }
 
 export default AdminRoutes;
-
-
-

@@ -1,38 +1,22 @@
-import homeBg from "../../assets/userImgs/homeBg.png";
-import std1 from "../../assets/userImgs/std1.png";
-import std2 from "../../assets/userImgs/std2.png";
-import std3 from "../../assets/userImgs/std3.png";
-import std4 from "../../assets/userImgs/std4.png";
-import std5 from "../../assets/userImgs/std5.png";
-import std6 from "../../assets/userImgs/std6.png";
-import std7 from "../../assets/userImgs/std7.png";
-
-
-import biology from "../../assets/userImgs/biology.png";
-import statistics from "../../assets/userImgs/statistics.png";
-import publicSpeaking from "../../assets/userImgs/publicSpeaking.png";
-
-
-import std8 from "../../assets/userImgs/std8.png";
-import std9 from "../../assets/userImgs/std9.png";
-
-import instructor from "../../assets/userImgs/instructor.png";
-import instructor2 from "../../assets/userImgs/instructor2.png";
-import instructor3 from "../../assets/userImgs/instructor3.png";
-import instructo4 from "../../assets/userImgs/instructor4.png";
-import instructor5 from "../../assets/userImgs/instructor5.png";
-import instructor6 from "../../assets/userImgs/instructor6.jpeg";
-import instructor7 from "../../assets/userImgs/instructor7.jpeg";
-import instructor8 from "../../assets/userImgs/instructor8.jpeg";
-import instructor9 from "../../assets/userImgs/instructor9.jpeg";
-import instructor10 from "../../assets/userImgs/instructor10.jpeg";
-import instructor11 from "../../assets/userImgs/instructor11.jpeg";
-import instructor12 from "../../assets/userImgs/instructor12.jpeg";
-import instructor13 from "../../assets/userImgs/instructor13.jpeg";
-import instructor14 from "../../assets/userImgs/instructor14.jpeg";
-import instructor15 from "../../assets/userImgs/instructor15.jpeg";
-import { GrommetIconsFacebookOption, FeTwitter, FlowbiteLinkedinSolid } from "../../assets/usersIcons/FooterIcons";
+import homeBg from "../../assets/userImages/homeBg.png";
+import std1 from "../../assets/userImages/std1.png";
+import std2 from "../../assets/userImages/std2.png";
+import std3 from "../../assets/userImages/std3.png";
+import std4 from "../../assets/userImages/std4.png";
+import std5 from "../../assets/userImages/std5.png";
+import std6 from "../../assets/userImages/std6.png";
+import std7 from "../../assets/userImages/std7.png";
+import std8 from "../../assets/userImages/std8.png";
+import std9 from "../../assets/userImages/std9.png";
+import biology from "../../assets/userImages/biology.png";
+import statistics from "../../assets/userImages/statistics.png";
+import publicSpeaking from "../../assets/userImages/publicSpeaking.png";
+import instructor8 from "../../assets/userImages/instructor8.jpeg";
+import instructor9 from "../../assets/userImages/instructor9.jpeg";
+import instructor14 from "../../assets/userImages/instructor14.jpeg";
+import { GrommetIconsFacebookOption, FeTwitter, FlowbiteLinkedinSolid } from "../../assets/userIcons/FooterIcons";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 // CSS for keyframes and animation
 const style = {
@@ -356,8 +340,6 @@ const StudentHome = () => {
                 </div>
                 {/* /comminity group cards */}
             </div>
-
-
 
 
             {/*   FOOTER   */}

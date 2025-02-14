@@ -3,9 +3,8 @@ import { useState } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { registerUser } from '../../slices/userSlice';
-import ErrorModal from "../../utils/users/ErrorModal";
+import ErrorModal from "../../modal/user/ErrorModal";
 import { useNavigate } from 'react-router-dom';
-
 
 const Register = () => {
   const navigate = useNavigate();
@@ -146,91 +145,91 @@ const Register = () => {
 
   return (
     <div className="h-screen bg-gray-100">
+      <h1 className="text-center py-14  text-black text-2xl font-bold">Sign up</h1>
+      <div className="rounded-xl flex -mt-6 ml-96 signup-container shadow-2xl shadow-slate-400 bg-white w-2/4 h-4/6 justify-center items-center">
 
-        <h1 className="text-center py-14  text-black text-2xl font-bold">Sign up</h1>
-        <div className="rounded-xl flex -mt-6 ml-96 signup-container shadow-2xl shadow-slate-400 bg-white w-2/4 h-4/6 justify-center items-center">
+        {/* right side */}
+        <div className="w-1/2 h-full rounded-tl-xl rounded-bl-xl bg-login-custom-gradient items-center justify-center">
+          <h1 className="text-3xl font-bold text-white ml-28 mt-36">Welcome!</h1>
+          <p className="text-white text-sm w-80 text-center ml-8 mt-4">Unlock your potential—let's dive into learning together!</p>
 
-          {/* right side */}
-          <div className="w-1/2 h-full rounded-tl-xl rounded-bl-xl bg-login-custom-gradient items-center justify-center">
-            <h1 className="text-3xl font-bold text-white ml-28 mt-36">Welcome!</h1>
-            <p className="text-white text-sm w-80 text-center ml-8 mt-4">Unlock your potential—let's dive into learning together!</p>
-
-            <a href="/login">
-              <button className="ml-28 mt-10 rounded-full border-2 border-white text-white px-11 py-2 text-xs font-bold">SIGN IN</button>
-            </a>
-          </div>
-
-          {/* left side */}
-          <div className="w-1/2 h-full rounded-tr-xl  rounded-br-xl ">
-            <h1 className="text-black font-bold font-sans text-3xl mt-16 ml-32">Sign up</h1>
-
-            <form onSubmit={handleSubmit}>
-              <input
-                  type="text" 
-                  name="firstName"
-                  value={formData.firstName} 
-                  onChange={handleChange} 
-                  placeholder="First Name"
-                  className=" ml-9 mt-11 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
-              />
-                {errors.firstName && <p className="text-red-500 text-xs ml-11">{errors.firstName}</p>}
-
-              <input
-                type="text" 
-                name="lastName"
-                value={formData.lastName} 
-                onChange={handleChange} 
-                placeholder="Last Name"
-                className="ml-9 mt-2 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
-              />
-              {errors.lastName && <p className="text-red-500 text-xs ml-11">{errors.lastName}</p>}
-
-              <input
-                type="email" 
-                name="email"
-                value={formData.email} 
-                onChange={handleChange} 
-                placeholder="Email"
-                className="ml-9 mt-2 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
-              />
-              {errors.email && <p className="text-red-500 text-xs ml-11">{errors.email}</p>}
-
-              <input
-                type="Password" 
-                name="password"
-                value={formData.password} 
-                onChange={handleChange} 
-                placeholder="Password"
-                className="ml-9 mt-2 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
-              />
-              {errors.password && <p className="text-red-500 text-xs ml-11">{errors.password}</p>}
-
-              <input
-                type="Password" 
-                name="confirmPassword"
-                value={formData.confirmPassword} 
-                onChange={handleChange} 
-                placeholder="Confirm password"
-                className="ml-9 mt-2 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
-              />
-              {errors.confirmPassword && <p className="text-red-500 text-xs ml-11">{errors.confirmPassword}</p>}
-
-              <button 
-                type="submit" 
-                disabled={loading} 
-                className="ml-28 mt-5 rounded-full bg-primary-orange border-2 border-primary-orange text-white px-11 py-2 text-xs font-bold">
-                SIGN UP
-              </button>
-              {/* custom modal */}
-              <ErrorModal
-                message={serverError}
-                isOpen={isModalOpen}
-                onClose={closeModal}
-              />
-            </form>
-          </div>
-          
+          <a href="/login">
+            <button className="ml-28 mt-10 rounded-full border-2 border-white text-white px-11 py-2 text-xs font-bold">SIGN IN</button>
+          </a>
         </div>
+
+        {/* left side */}
+        <div className="w-1/2 h-full rounded-tr-xl  rounded-br-xl ">
+          <h1 className="text-black font-bold font-sans text-3xl mt-16 ml-32">Sign up</h1>
+
+          <form onSubmit={handleSubmit}>
+            <input
+                type="text" 
+                name="firstName"
+                value={formData.firstName} 
+                onChange={handleChange} 
+                placeholder="First Name"
+                className=" ml-9 mt-11 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
+            />
+            {errors.firstName && <p className="text-red-500 text-xs ml-11">{errors.firstName}</p>}
+
+            <input
+              type="text" 
+              name="lastName"
+              value={formData.lastName} 
+              onChange={handleChange} 
+              placeholder="Last Name"
+              className="ml-9 mt-2 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
+            />
+            {errors.lastName && <p className="text-red-500 text-xs ml-11">{errors.lastName}</p>}
+
+            <input
+              type="email" 
+              name="email"
+              value={formData.email} 
+              onChange={handleChange} 
+              placeholder="Email"
+              className="ml-9 mt-2 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
+            />
+            {errors.email && <p className="text-red-500 text-xs ml-11">{errors.email}</p>}
+
+            <input
+              type="Password" 
+              name="password"
+              value={formData.password} 
+              onChange={handleChange} 
+              placeholder="Password"
+              className="ml-9 mt-2 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
+            />
+            {errors.password && <p className="text-red-500 text-xs ml-11">{errors.password}</p>}
+
+            <input
+              type="Password" 
+              name="confirmPassword"
+              value={formData.confirmPassword} 
+              onChange={handleChange} 
+              placeholder="Confirm password"
+              className="ml-9 mt-2 w-72 p-2 text-sm flex-grow bg-gray-100 text-black focus:outline-none placeholder-gray-500 placeholder:text-xs"
+            />
+            {errors.confirmPassword && <p className="text-red-500 text-xs ml-11">{errors.confirmPassword}</p>}
+
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="ml-28 mt-5 rounded-full bg-primary-orange border-2 border-primary-orange text-white px-11 py-2 text-xs font-bold">
+              SIGN UP
+            </button>
+
+            {/* custom modal */}
+            <ErrorModal
+              message={serverError}
+              isOpen={isModalOpen}
+              onClose={closeModal}
+            />
+          </form>
+        </div>
+        
+      </div>
     </div>
   );
 };

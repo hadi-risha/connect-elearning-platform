@@ -1,6 +1,6 @@
 
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import axiosInstance from '../utils/users/axiosInstance'
+import axiosInstance from '../utils/user/axiosInstance'
 
 interface OtpPayload {
   email: string;
@@ -17,9 +17,8 @@ export const verifyOtp = createAsyncThunk<OtpResponse, OtpPayload>(
   'otp/verifyOtp',
   async ({ email, otp }, thunkAPI) => {
     try {
-      console.log("in verifyOtp slice");
       const response = await axiosInstance.post('/auth/verify-otp', { email, otp });
-      console.log("response.data in verifyOtp slice : ",response.data);
+      // console.log("response.data in verifyOtp slice : ",response.data);
       const { token } = response.data;
       localStorage.setItem('token', token);
       return response.data;

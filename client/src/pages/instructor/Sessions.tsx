@@ -1,10 +1,10 @@
-import { TypcnUserAdd, PrimeStarFill, AntDesignMessageFilled, FluentNotepadEdit16Filled, TeenyiconsUpSolid, SolarMenuDotsBold, MaterialSymbolsAdd } from '../../assets/usersIcons/ProfileIcons'
+import { TypcnUserAdd, PrimeStarFill, AntDesignMessageFilled, FluentNotepadEdit16Filled, TeenyiconsUpSolid, SolarMenuDotsBold, MaterialSymbolsAdd } from '../../assets/userIcons/ProfileIcons'
 import { useEffect, useState } from 'react'
-import axiosInstance from '../../utils/users/axiosInstance'
-import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../utils/user/axiosInstance'
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
-import Modal from '../../utils/users/userLogout';
-
+import Modal from '../../utils/user/userLogout';
+import { useUserData } from "../../context/userDataProvider"
 
 
 
@@ -33,52 +33,14 @@ interface ISession {
 
 const Sessions = () => {
     const navigate = useNavigate();  // Initialize navigate function
+    const { userData, setUserData} = useUserData()
+
 
     const [sessions, setSessions] = useState<ISession[]>([]); // Typed state
     const [loading, setLoading] = useState(true);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-
-    const [profileData, setProfileData] = useState({
-        role: '',
-        firstName: '',
-        lastName: '',
-        occupation: '',
-        currentInstitution: '',
-        profilePic: '',
-    });
-
-    useEffect(() => {
-        async function fetchProfile() {
-            try {
-                const res = await axiosInstance.get('/instructor/profile');
-                console.log("res profile data in update all data------------",res.data);
-                console.log("res profile data in update data------------",res.data.message);
-
-                const {
-                    role,
-                    firstName, 
-                    lastName,
-                    occupation, 
-                    currentInstitution, 
-                    profilePicUrl } = res.data;
-
-                setProfileData({
-                    role: role || '',
-                    firstName: firstName || '',
-                    lastName: lastName || '',
-                    occupation: occupation || '',
-                    currentInstitution: currentInstitution || '',
-                    profilePic: profilePicUrl || '',
-                });
-            } catch (error) {
-                console.error("Error fetching profile:", error);
-            }
-        }
-        fetchProfile();
-    }, []);
-
 
     useEffect(() => {
         async function fetchBookings() {
@@ -173,20 +135,20 @@ const handleDelete = async (id: string) => {
                 
                 {/* profile photo section */}
                 <div className='flex w-full h-3 pl-10 pt-8'>
-                    {profileData && profileData.profilePic ? (
+                    {userData && userData.profilePicUrl ? (
                         <img
-                            src={profileData.profilePic} className="w-20 h-20 object-cover rounded-full" alt="Instructor Profile"
+                            src={userData.profilePicUrl} className="w-20 h-20 object-cover rounded-full" alt="Instructor Profile"
                         />
                     ) : (
                         <FaUserCircle className="w-20 h-20 text-white" />
                     )}
 
                     <div className='pl-5 pt-2'>
-                        <p className='text-lg text-black font-medium font-serif'>{profileData.firstName} {profileData.lastName}</p>
-                        <p className='text-gray-600'>{profileData.role}</p>
+                        <p className='text-lg text-black font-medium font-serif'>{userData?.firstName} {userData?.lastName}</p>
+                        <p className='text-gray-600'>{userData?.role}</p>
                     </div>
 
-                    <div className='flex ml-auto bg-white w-80 h-16 space-x-6 pl-9 pt-2 rounded-tl-md rounded-bl-md'>
+                    {/* <div className='flex ml-auto bg-white w-80 h-16 space-x-6 pl-9 pt-2 rounded-tl-md rounded-bl-md'>
                         <div className='w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center '>
                             <TypcnUserAdd />
                         </div>
@@ -199,7 +161,7 @@ const handleDelete = async (id: string) => {
                         <div className='w-12 h-12 bg-violet-400 rounded-full flex items-center justify-center'>
                             <FluentNotepadEdit16Filled />
                         </div>
-                    </div>
+                    </div> */}
 
                 </div>
 
@@ -210,41 +172,44 @@ const handleDelete = async (id: string) => {
                 {/* options section */}
                 <div className='mt-28 ml-10 h-auto flex'>
                     <div>
-                        {profileData.occupation && 
+                        {userData?.occupation && 
                             <p className='font-semibold text-gray-700'>Position: 
-                                <span className='font-normal text-gray-700'> {profileData.occupation}</span>
+                                <span className='font-normal text-gray-700'> {userData?.occupation}</span>
                             </p>
                         }
-                        {profileData.currentInstitution && 
+                        {userData?.currentInstitution && 
                             <p className='font-semibold text-gray-700'>Institution: 
-                                <span className='font-normal text-gray-700'> {profileData.currentInstitution}</span>
+                                <span className='font-normal text-gray-700'> {userData?.currentInstitution}</span>
                             </p>
                         }
                     </div>
 
-                    <div className='flex space-x-20 ml-20'>
-                        <a href={"/instructor/profile"}>
+                    <div className='flex space-x-10 ml-20'>
+                        <Link to={"/instructor/profile"}>
                             <p className='text-black font-serif text-lg'>About</p>
-                        </a>
+                        </Link>
                         <div>
                             <p className='text-primary-orange font-serif text-lg'>Session Actions</p>
                             <TeenyiconsUpSolid className='ml-12 mt-2' />
                         </div>
-                        <a href={"/instructor/booked-sessions"}>
+                        <Link to={"/instructor/booked-sessions"}>
                             <p className='text-black font-serif text-lg'>Confirmed Sessions</p>
-                        </a>
+                        </Link>
 
-                        <a href={"/instructor/session-history"}>
+                        <Link to={"/instructor/session-history"}>
                             <p className='text-black font-serif text-lg'>Session History</p>
-                        </a>
+                        </Link>
+                        <Link to={"/user/reset-password"}>
+                            <p className='text-black font-serif text-lg'>Reset password</p>
+                        </Link>
                     </div>
 
                     <div className="ml-auto mr-6 relative group">
-                        <a href="/instructor/create-session">
+                        <Link to="/instructor/create-session">
                             <div className="bg-[#f6f6f6] w-10 h-10 -mt-2 rounded-full flex items-center justify-center hover:border hover:border-black">
                                 <MaterialSymbolsAdd />
                             </div>
-                        </a>
+                        </Link>
                         {/* Tooltip for text */}
                         <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 text-sm text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
                             Create
@@ -263,7 +228,7 @@ const handleDelete = async (id: string) => {
                 <p>Loading...</p>
             ) : sessions.length > 0 ? (
                 sessions.map((session) => (
-                    <div key={session._id} className='relative w-[380px] h-[460px] rounded-2xl border-2 border-black'>
+                    <div key={session._id} className='relative w-[350px] h-[430px] rounded-2xl border-2 border-black'>
                         <div className='absolute inset-0 bg-black opacity-50 rounded-2xl'></div> {/* Black overlay */}
                         <div className='w-full h-full rounded-2xl' style={{ backgroundImage: `url(${session.coverImage.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
                         <div className='absolute bottom-0 left-0 w-full  bg-opacity-60 py-4 px-7 text-white rounded-b-2xl'>

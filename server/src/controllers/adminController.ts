@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/adminTokenService";
-import { AdminService } from '../services/adminService'
+import { AdminService } from '../services/adminRepoService';
 import config from "../config/config";
 import { HttpStatus } from '../utils/httpStatusCodes';
-import { UserService } from "../services/userService";
+import AiRatingModel from "../models/aiRating";
+import { ChatModel } from "../models/chatModel";
+import { UserModel } from "../models/userModel";
 
 
 
@@ -215,6 +217,129 @@ export class AdminController {
     }
   }
 
+
+
+
+  public async getAiRatings(req: Request, res: Response): Promise<Response> {
+    try {
+      // Fetch all AI ratings in descending order of `createdAt`
+      const aiRatings = await AiRatingModel.find().populate("userId", "firstName lastName email role image.url").sort({ createdAt: -1 });
+
+      return res.status(HttpStatus.OK).json({ message: "AI Ratings fetched successfully", aiRatings,});
+    } catch (error) {
+      console.error("Error fetching AI ratings:", error);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching AI ratings",});
+    }
+  }
+
+
+
+  public async getCommunities(req: Request, res: Response): Promise<Response> {
+    try {
+      // Fetch all group chats and populate admin + user details
+      const communityChats = await ChatModel.find({ isGroupChat: true })
+        .populate("groupAdmin", "_id firstName lastName email image.url") // Fetch admin details
+        .populate("users", "_id firstName lastName email image.url") // Fetch all users' details
+        .sort({ createdAt: -1 });
+
+      return res.status(HttpStatus.OK).json({
+        message: "Community chats fetched successfully",
+        communityChats,
+      });
+    } catch (error) {
+      console.error("Error fetching community chats:", error);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: "Error fetching community chats",
+      });
+    }
+  }
+
+
+  public async deleteCommunity(req: Request, res: Response): Promise<Response> {
+    try {
+        const { groupId } = req.params;
+
+        // Find and delete the group
+        const deletedCommunity = await ChatModel.findByIdAndDelete(groupId);
+
+        if (!deletedCommunity) {
+            return res.status(HttpStatus.NOT_FOUND).json({
+                message: "Community not found",
+            });
+        }
+
+        return res.status(HttpStatus.OK).json({
+            message: "Community deleted successfully",
+        });
+    } catch (error) {
+        console.error("Error deleting community:", error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            message: "Error deleting community",
+        });
+    }
+  }
+
+
+
+
+
+public async removeUserFromCommunity(req: Request, res: Response): Promise<Response> {
+    try {
+        const { groupId, userId } = req.params;
+
+        // Find the group chat
+        const community = await ChatModel.findById(groupId);
+        if (!community) {
+            return res.status(HttpStatus.NOT_FOUND).json({
+                message: "Community not found",
+            });
+        }
+
+        // Check if the user is part of the group
+        if (!community.users.includes(userId)) {
+            return res.status(HttpStatus.BAD_REQUEST).json({
+                message: "User is not a member of this community",
+            });
+        }
+
+        // Remove the user from the users array
+        community.users = community.users.filter((id) => id.toString() !== userId);
+        await community.save();
+
+        return res.status(HttpStatus.OK).json({
+            message: "User removed from community successfully",
+        });
+    } catch (error) {
+        console.error("Error removing user from community:", error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            message: "Error removing user from community",
+        });
+    }
+}
+
+
+
+public async dashboard(req: Request, res: Response): Promise<Response> {
+    try {
+        const totalUsers = await UserModel.countDocuments();
+        const instructors = await UserModel.countDocuments({ role: "instructor" });
+        const students = await UserModel.countDocuments({ role: "student" });
+        const blockedUsers = await UserModel.countDocuments({ isBlocked: true });
+
+        const dashboard = {
+          totalUsers, instructors, students, blockedUsers,
+        }
+         return res.status(HttpStatus.OK).json({
+            message: "dashboard fetched successfully", dashboard
+        });
+
+    } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
+}
 
 
 

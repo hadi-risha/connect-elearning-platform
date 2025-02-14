@@ -1,16 +1,17 @@
-import { SolarMenuDotsBold, PrimeStarFill, AntDesignMessageFilled, FluentNotepadEdit16Filled, TeenyiconsUpSolid, IcSharpPersonAdd, TypcnUserAdd, MaterialSymbolsAdd } from '../../assets/usersIcons/ProfileIcons'
-import { BxCalendar, IcOutlineAccessTime, PhChalkboardTeacher } from '../../assets/usersIcons/SessionIcons'
+import { SolarMenuDotsBold, PrimeStarFill, AntDesignMessageFilled, FluentNotepadEdit16Filled, TeenyiconsUpSolid, IcSharpPersonAdd, TypcnUserAdd, MaterialSymbolsAdd } from '../../assets/userIcons/ProfileIcons'
+import { BxCalendar, IcOutlineAccessTime, PhChalkboardTeacher } from '../../assets/userIcons/SessionIcons'
 import { useEffect, useState } from 'react'
-import axiosInstance from '../../utils/users/axiosInstance'
-import { useNavigate } from 'react-router-dom'
+import axiosInstance from '../../utils/user/axiosInstance'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaUserCircle } from 'react-icons/fa'
 import bg4 from '../../assets/userImgs/bg-4.jpeg';
-import {  } from '../../assets/usersIcons/ProfileIcons'
+import {  } from '../../assets/userIcons/ProfileIcons'
+import { useUserData } from "../../context/userDataProvider"
+
 
 
 interface ISession {
     _id: string;
-    // studentId: string;
     sessionId: {
         _id: string;
         title: string;
@@ -37,103 +38,19 @@ interface ISession {
 
 const InstructorSessionHistory = () => {
     const navigate = useNavigate();  // Initialize navigate function
-
+    const { userData, setUserData} = useUserData()
     const [history, setHistory] = useState<ISession[]>([]); // Typed state
     const [loading, setLoading] = useState(true);
-
-
-    const [profileData, setProfileData] = useState({
-        email: '',
-        role: '',
-        firstName: '',
-        lastName: '',
-        about: '',
-        country: '',
-        occupation: '',
-        currentInstitution: '',
-        teachingViews: '',
-        achievements: '',
-        education: '',
-        experience: '',
-        profilePic: '',
-      });
-
-      useEffect(() => {
-        async function fetchProfile() {
-          try {
-            const res = await axiosInstance.get('/instructor/profile');
-            // console.log("res profile data in update all data------------",res.data);
-            // console.log("res profile data in update data------------",res.data.message);
-
-            const { 
-                email, 
-                role, 
-                firstName, 
-                lastName } = res.data;
-    
-            const {  
-                about,
-                country,
-                occupation, 
-                currentInstitution, 
-                teachingViews, 
-                achievements, 
-                education, 
-                experience, 
-                profilePicUrl } = res.data;
-    
-    
-            setProfileData({
-              email: email || '',
-              role: role || '',
-              firstName: firstName || '',
-              lastName: lastName || '',
-              about: about || '',
-              country: country || '',
-              occupation: occupation || '',
-              currentInstitution: currentInstitution || '',
-              teachingViews: teachingViews || '',
-              achievements: achievements || '',
-              education: education || '',
-              experience: experience || '',
-              profilePic: profilePicUrl || '',
-            });
-          } catch (error) {
-            console.error("Error fetching profile:", error);
-          }
-        }
-        fetchProfile();
-      }, []);
-
 
 
     useEffect(() => {
         async function fetchHistory() {
           try {
             const response = await axiosInstance.get("/instructor/session-history"); // Adjust the endpoint if needed
-            
             console.log("API Response   : ", response);
 
-            // const sessions = Object.values(response.data).filter(
-            //     (item) => typeof item === "object"
-            //   );
-
-
-            // const sessions = Object.values(response.data).filter(
-            // (item): item is ISession => typeof item === "object" && item !== null && "_id" in item
-            // );
             const sessions = response.data.historyData || [];
-        
-              console.log("Parsed Sessions:", sessions);
-            
-
-            
-            console.log("response           1", response);
-            console.log("response.data:      2", response.data);
-            console.log("response           3", response.data.booking);
-            console.log("response           3", response.data.instructorId);
-            console.log("response           3", response.data.instructorId);
-
+            console.log("Parsed Sessions:", sessions);
             
             setHistory(sessions); // Store the booking data
             setLoading(false);
@@ -143,7 +60,7 @@ const InstructorSessionHistory = () => {
           }
         };
       
-        console.log("booking------------------55", history);
+        console.log("history-------", history);
         fetchHistory();
     }, []);
 
@@ -169,6 +86,36 @@ const InstructorSessionHistory = () => {
   const handleViewDetails = (sessionId: string) => {
     navigate(`/instructor/session/${sessionId}`);
   };
+
+
+
+  
+      const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+      const [expandedSession, setExpandedSession] = useState<number | null>(null);
+    
+      const toggleViewMode = () => {
+        setViewMode((prevMode) => (prevMode === 'card' ? 'list' : 'card'));
+      };
+    
+      const toggleSessionDetails = (index: number) => {
+        setExpandedSession((prevIndex) => (prevIndex === index ? null : index));
+      };
+    
+      const convertTo12HourFormat = (time: string): string => {
+        if (!time) return ""; // Handle empty or undefined input
+    
+        const parts = time.split(":");
+        if (parts.length < 2) return time; // Return original time if format is incorrect
+    
+        let [hours, minutes] = parts.map(Number); // Convert to numbers safely
+        if (isNaN(hours) || isNaN(minutes)) return time; // Handle invalid numbers
+    
+        const period = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12; // Convert 0 to 12 for AM case
+    
+        return `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
+    };
+  
   
 
   return (
@@ -181,20 +128,20 @@ const InstructorSessionHistory = () => {
 
                 {/* profile photo section */}
                 <div className='flex w-full h-3 pl-10 pt-8'>
-                    {profileData && profileData.profilePic ? (
+                    {userData && userData.profilePicUrl ? (
                         <img
-                            src={profileData.profilePic} className="w-20 h-20 object-cover rounded-full" alt="Instructor Profile"
+                            src={userData.profilePicUrl} className="w-20 h-20 object-cover rounded-full" alt="Instructor Profile"
                         />
                     ) : (
                         <FaUserCircle className="w-20 h-20 text-white" />
                     )}
 
                     <div className='pl-5 pt-2'>
-                        <p className='text-lg text-black font-medium font-serif'>{profileData.firstName} {profileData.lastName}</p>
-                        <p className='text-gray-600'>{profileData.role}</p>
+                        <p className='text-lg text-black font-medium font-serif'>{userData?.firstName} {userData?.lastName}</p>
+                        <p className='text-gray-600'>{userData?.role}</p>
                     </div>
 
-                    <div className='flex ml-auto bg-white w-80 h-16 space-x-6 pl-9 pt-2 rounded-tl-md rounded-bl-md'>
+                    {/* <div className='flex ml-auto bg-white w-80 h-16 space-x-6 pl-9 pt-2 rounded-tl-md rounded-bl-md'>
                         <div className='w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center '>
                             <TypcnUserAdd />
                         </div>
@@ -207,48 +154,51 @@ const InstructorSessionHistory = () => {
                         <div className='w-12 h-12 bg-violet-400 rounded-full flex items-center justify-center'>
                             <FluentNotepadEdit16Filled />
                         </div>
-                    </div>
+                    </div> */}
 
                 </div>
 
                     {/* options section */}
                 <div className='mt-28 ml-10 h-auto flex'>
                     <div>
-                        {profileData.occupation && 
+                        {userData?.occupation && 
                             <p className='font-semibold text-gray-700'>Position: 
-                                <span className='font-normal text-gray-700'> {profileData.occupation}</span>
+                                <span className='font-normal text-gray-700'> {userData?.occupation}</span>
                             </p>
                         }
-                        {profileData.currentInstitution && 
+                        {userData?.currentInstitution && 
                             <p className='font-semibold text-gray-700'>Institution: 
-                                <span className='font-normal text-gray-700'> {profileData.currentInstitution}</span>
+                                <span className='font-normal text-gray-700'> {userData?.currentInstitution}</span>
                             </p>
                         }
                     </div>
 
-                    <div className='flex space-x-20 ml-20'>
-                        <a href={"/instructor/profile"}>
+                    <div className='flex space-x-10 ml-20'>
+                        <Link to={"/instructor/profile"}>
                             <p className='text-black font-serif text-lg'>About</p>
-                        </a>
-                        <a href={"/instructor/session-actions"}>
+                        </Link>
+                        <Link to={"/instructor/session-actions"}>
                             <p className='text-black font-serif text-lg'>Session Actions</p>
-                        </a>
+                        </Link>
                        
-                        <a href={"/instructor/booked-sessions"}>
+                        <Link to={"/instructor/booked-sessions"}>
                             <p className='text-black font-serif text-lg'>Confirmed Sessions</p>
-                        </a>
+                        </Link>
                         <div>
                             <p className='text-primary-orange font-serif text-lg'>Session History</p>
                             <TeenyiconsUpSolid className='mt-2 ml-12' />
                         </div>
+                        <Link to={"/user/reset-password"}>
+                            <p className='text-black font-serif text-lg'>Reset password</p>
+                        </Link>
                     </div>
 
                     <div className="ml-auto mr-6 relative group">
-                        <a href="/instructor/create-session">
+                        <Link to="/instructor/create-session">
                             <div className="bg-[#f6f6f6] w-10 h-10 -mt-2 rounded-full flex items-center justify-center hover:border hover:border-black">
                                 <MaterialSymbolsAdd />
                             </div>
-                        </a>
+                        </Link>
                         {/* Tooltip for text */}
                         <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 text-sm text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
                             Create
@@ -260,10 +210,8 @@ const InstructorSessionHistory = () => {
 
 
         {/* user info */}
-        <div className="ml-28 mr-36 mt-8 mb-36 h-auto py-16 px-14 shadow-2xl grid grid-cols-4 gap-3">
-
-
-        {loading ? (
+        {/* <div className="ml-28 mr-36 mt-8 mb-36 h-auto py-16 px-14 shadow-2xl grid grid-cols-4 gap-3">
+            {loading ? (
                 <p>Loading...</p>
             ) : history.length > 0 ? (
                 history.map((session) => (
@@ -271,21 +219,16 @@ const InstructorSessionHistory = () => {
                     key={session._id}
                     className='px-8 py-10 relative w-[280px] h-[350px] rounded-2xl border-2 border-black'
                 >
-                    {/* Session Title */}
                     <p className="text-black font-serif">{session.sessionId.title}</p>
 
-                    {/* Instructor Name */}
                     <div className="flex space-x-3 pt-10">
-                        {/* <PhChalkboardTeacher /> */}
                         <p className="text-gray-600 text-sm"> Student: {` `}
                             {session.studentId?.firstName} {session.studentId?.lastName}
                         </p>
                     </div>
                     <hr className="mt-3 border border-gray-300" />
 
-                    {/* Time Slot */}
                     <div className="mt-5 flex justify-between space-x-3 ">
-                        {/* <IcOutlineAccessTime /> */}
                         
                         {session.status === 'cancelled' ? (
                             <div className='space-y-5'>
@@ -328,8 +271,70 @@ const InstructorSessionHistory = () => {
             ) : (
                 <p>No sessions available.</p>
             )}
+        </div> */}
 
 
+        <div className='mt-8 mb-36 h-auto py-16 px-32 w-full flex flex-col justify-center'>
+
+            <div className="mb-6">
+                <p
+                    className="w-64 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                    Click the Card to View More Details
+                </p>
+            </div>
+
+            <div className="space-y-4">
+            {history.map((session, index) => (
+                <div
+                key={index}
+                className={`${
+                    viewMode === 'card'
+                    ? 'bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow'
+                    : 'bg-white border-b border-gray-200 p-4'
+                }`}
+                onClick={() => toggleSessionDetails(index)}
+                >
+                <div className="flex justify-between items-center">
+                    <div>
+                    <h2 className="text-lg font-semibold truncate">{session.sessionId.title}</h2>
+                    <p className="text-sm text-gray-600">Student: {session.studentId.firstName} {session.studentId.lastName}</p>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-500">{formatDate(session.date)}</span>
+                    <span
+                        className={`px-2 py-1 text-sm rounded-full ${
+                        session.status === 'cancelled'
+                            ? 'bg-red-100 text-red-600'
+                            : 'bg-green-100 text-green-600'
+                        }`}
+                    >
+                        {session.status}
+                    </span>
+                    </div>
+                </div>
+
+                {expandedSession === index && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p>
+                        <strong>Time:</strong> {convertTo12HourFormat(session.timeSlot)}
+                        
+                    </p>
+                    <p>
+                        <strong>Duration:</strong> {session.sessionId.duration}
+                    </p>
+                    <p>
+                        <strong>Fees:</strong> {session.sessionId.fee}
+                    </p>
+                    <p>
+                        <strong>Details:</strong> This session was {session.status.toLowerCase()}. No further details
+                        available.
+                    </p>
+                    </div>
+                )}
+                </div>
+            ))}
+            </div>
 
         </div>
 

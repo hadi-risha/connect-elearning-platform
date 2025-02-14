@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axiosInstance from '../../utils/users/axiosInstance'
+import axiosInstance from '../../utils/user/axiosInstance'
 import { useNavigate } from 'react-router-dom';
 
 interface ISession {

@@ -1,10 +1,10 @@
 import awardImg from '../../assets/userImgs/award.png'
-import { EmojioneMonotoneRibbon } from '../../assets/usersIcons/SessionIcons'
-import { EmojioneStar, EmojioneMonotoneStar } from '../../assets/usersIcons/HomeIcons';
-import { BiCashStack, MdiClockOutline, OuiTokenDate } from '../../assets/usersIcons/SessionIcons';
+import { EmojioneMonotoneRibbon } from '../../assets/userIcons/SessionIcons'
+import { EmojioneStar, EmojioneMonotoneStar } from '../../assets/userIcons/HomeIcons';
+import { BiCashStack, MdiClockOutline, OuiTokenDate } from '../../assets/userIcons/SessionIcons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import axiosInstance from '../../utils/users/axiosInstance';
+import axiosInstance from '../../utils/user/axiosInstance';
 
 interface ISession {
     id: string;

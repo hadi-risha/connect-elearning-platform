@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { IUser,IRegisterData } from '../types/User';
-import config from '../config';
+import config from '../config/config';
 
 interface UserState {
   user: IUser | null;

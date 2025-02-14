@@ -1,8 +1,8 @@
-import { BitcoinIconsArrowLeftFilled} from '../../assets/usersIcons/ProfileIcon';
+import { BitcoinIconsArrowLeftFilled} from '../../assets/userIcons/ProfileIcon';
 import { FaCamera } from 'react-icons/fa';
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom'; 
-import axiosInstance from '../../utils/users/axiosInstance';
+import axiosInstance from '../../utils/user/axiosInstance';
 
 const UpdateSession = () => {
 

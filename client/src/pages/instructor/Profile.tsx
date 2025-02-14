@@ -2,11 +2,11 @@ import { IcSharpPersonAdd, PrimeStarFill, AntDesignMessageFilled,
     FluentNotepadEdit16Filled, TeenyiconsUpSolid, SolarMenuDotsBold, 
     IonPerson, LineiconsWorld, PhBagFill, IcRoundEmail, MdiHexagonMultiple, 
     GameIconsAchievement, MdiEducationOutline, TdesignStarFilled, 
-    FluentEdit28Filled} from '../../assets/usersIcons/ProfileIcons'
+    FluentEdit28Filled} from '../../assets/userIcons/ProfileIcons'
 import instructor from '../../assets/userImgs/instructor.png';
 import bg4 from '../../assets/userImgs/bg-4.jpeg';
 import { useEffect, useState } from 'react';
-import axiosInstance from '../../utils/users/axiosInstance';
+import axiosInstance from '../../utils/user/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
 

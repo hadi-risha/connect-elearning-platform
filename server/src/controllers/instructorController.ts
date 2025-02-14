@@ -1,43 +1,83 @@
 import { Request, Response } from 'express';
-import { UserService } from '../services/userService';
-import { uploadImageToS3, deleteImageFromS3 } from '../utils/s3Service';
-import { log } from 'winston';
-import config from '../config/config';
+import { UserService } from '../services/userRepoService';
 import { HttpStatus } from '../utils/httpStatusCodes';
+import { uploadImageToS3, deleteImageFromS3 } from '../utils/s3Service';
+import config from '../config/config';
+import bcrypt from 'bcryptjs'; 
 import mongoose from 'mongoose';
 import { IInstructor, ISession } from '../models/sessionModel';
-import { IChat } from '../models/chatModel';
-
-
-
+import { ChatModel, IChat } from '../models/chatModel';
+// import { getReceiverSocketId, io } from '../utils/socket';
+import { IPost, PostModel } from '../models/postModel';
+import { UserModel } from '../models/userModel';
+import { MessageModel } from '../models/messageModel';
+import { AiChatModel } from '../models/aiChat';
+import { AiUserChatsModel } from '../models/aiUserChats';
+import { BookingModel } from '../models/bookingModel';
 
 
 const userService = new UserService();
 
-/* INSTRUCTOR HOME */
-export const instructorHome = async (req: Request, res: Response): Promise<Response> => {
+interface IUserData {
+    id: string;
+    role: string;
+}
 
-    console.log("req.userData in instructor home page" , req.userData);
 
-    let token = req.header("Authorization"); 
-    console.log("token in instructor home", token);
+export const getProfile = async (req: Request, res: Response): Promise<Response> => {
+  let token = req.header("Authorization"); 
+  const {id, role} = req.userData as IUserData;
+  try {
+    const user = await userService.findUserById(id);
+    if (!user) {
+        return res.status(HttpStatus.NOT_FOUND).json({ message: "User not found" });
+    }
     
-    
-    if (req.userData && typeof req.userData === 'object' && 'id' in req.userData) {
-        const id = (req.userData as { id: string }).id; 
-        console.log("id", id);
-        
-        try {
-            const user = await userService.findUserById(id);
-            console.log(user);
-            return res.json({message: "user data", user });
-        } catch (error) {
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching user' });
-        }
+    const profile = await userService.findUserById(id );
+    if (!profile) {
+      console.log("No details were found in the user profile", profile);
     }
 
-    return res.status(HttpStatus.OK).json({ message: "Welcome to the instructor Home Page", userData: req.userData });
+    const userData = {
+      id:user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      profilePicUrl: user.image?.url ? user.image?.url : null,
+      profilePicKey: user.image?.key ? user.image?.key : null,
+      country: user.country,
+      education: user.education,
+      about: user.about,
+      occupation: user?.occupation,
+      currentInstitution: user?.currentInstitution,
+      teachingViews: user?.teachingViews,
+      achievements: user?.achievements,
+      experience: user?.experience
+    };
+    
+    return res.status(HttpStatus.OK).json({ message: "User profile fetched successfully",  ...userData });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while fetching the profile" });
+  }
 };
+
+
+// export const instructorHome = async (req: Request, res: Response): Promise<Response> => {
+//     let token = req.header("Authorization"); 
+    
+//     if (req.userData && typeof req.userData === 'object' && 'id' in req.userData) {
+//       const id = (req.userData as { id: string }).id;       
+//       try {
+//           const user = await userService.findUserById(id);
+//           return res.json({message: "user data", user });
+//       } catch (error) {
+//           return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching user' });
+//       }
+//     }
+//     return res.status(HttpStatus.OK).json({ message: "Welcome to the instructor Home Page", userData: req.userData });
+// };
 
 
 export const sessions = async (req: Request, res: Response): Promise<Response> => {
@@ -51,97 +91,34 @@ export const sessions = async (req: Request, res: Response): Promise<Response> =
 };
 
 
-export const getProfile = async (req: Request, res: Response): Promise<Response> => {
-    
-  let token = req.header("Authorization"); 
-  console.log("token in get profile", token);
-
-  const {id, role} = req.userData as IUserData;
-  console.log("id, role", id, role);
-  
-  console.log("req.userData " , req.userData);
-
-    try {
-      const user = await userService.findUserById(id);
-      if (!user) {
-          return res.status(HttpStatus.NOT_FOUND).json({ message: "User not found" });
-      }else{
-        console.log("details found in user", user);
-      }
-
-      const profile = await userService.findUserById(id );
-      if (!profile) {
-        console.log("no details found from user profile", profile);
-        
-      }else{
-        console.log("details found in user profile", profile);
-      }
-
-      const userData = {
-        id:user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        profilePicUrl: user.image?.url ? user.image?.url : null,
-        profilePicKey: user.image?.key ? user.image?.key : null,
-        country: user.country,
-        occupation: user.occupation,
-        education: user.education,
-        about: user.about,
-        currentInstitution: user.currentInstitution,
-        teachingViews: user.teachingViews,
-        achievements: user.achievements,
-        experience: user.experience
-      };
-
-      console.log("userData:", userData);
-      
-      return res.status(HttpStatus.OK).json({ message: "User profile fetched successfully",  ...userData });
-
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while fetching the profile" });
-    }
-
-};
-
 interface IUserData {
-    id: string;
-    role: string;
-  }
+  id: string;
+  role: string;
+}
+
 export const updateProfile = async (req: Request, res: Response): Promise<Response> => {
-
-
-
   const { firstName, lastName, about, country, occupation,currentInstitution,
     teachingViews,achievements,
     education,experience, imageStatus} = req.body;
-
-  console.log("imageStatus..>>   ", imageStatus);
+  console.log("imageStatus:- ", imageStatus);
 
   try {
     let token = req.header("Authorization"); 
-    console.log("token in instructor update profile", token);
-
     const {id, role} = req.userData as IUserData;
-    console.log("id, role", id, role);
 
     const profilePicFile = req.file;
     console.log("profilePicFile", profilePicFile);
 
     const key = req.file;
-    console.log("image,   req.file.key : ", key);
+    console.log("image key >> req.file.key : ", key);
 
     const imageUnchanged = imageStatus === 'unchanged';
     const deleteProfilePic = imageStatus === 'deleted';
     const updateProfilePic = imageStatus === 'updated';
 
-    console.log("imageUnchanged     ", imageUnchanged);
-    console.log("updateProfilePic     ", updateProfilePic);
-    console.log("deleteProfilePic     ", deleteProfilePic);
-
-
+    // console.log("imageUnchanged     ", imageUnchanged);
+    // console.log("updateProfilePic     ", updateProfilePic);
+    // console.log("deleteProfilePic     ", deleteProfilePic);
 
     const existingProfile = await userService.findUserById(id);
     if (!existingProfile) {
@@ -151,19 +128,11 @@ export const updateProfile = async (req: Request, res: Response): Promise<Respon
     console.log("image from frontend - key : ", profilePicFile);
     console.log("already exist image..from backend db        " , existingProfile?.image);
 
-
-
-
-
-
-
     // upload the profile picture to S3 if provided
     let profilePicUrl = '';
     if (profilePicFile && updateProfilePic) {
       console.log("profile pic changed");
-      
       const { url: profilePicUrl, key: profilePicKey } = await uploadImageToS3(profilePicFile);
-
       
       existingProfile.image = {
         url: profilePicUrl,
@@ -189,94 +158,71 @@ export const updateProfile = async (req: Request, res: Response): Promise<Respon
       console.log("profilePicFile && updateProfilePic", profilePicFile , updateProfilePic);
     }
 
-      existingProfile.firstName = firstName ?? existingProfile.firstName;
-      existingProfile.lastName = lastName ?? existingProfile.lastName;
-      if (about !== undefined) existingProfile.about = about;
-      if (country !== undefined) existingProfile.country = country;
-      if (occupation !== undefined) existingProfile.occupation = occupation;
-      if (currentInstitution !== undefined) existingProfile.currentInstitution = currentInstitution;
-      if (teachingViews !== undefined) existingProfile.teachingViews = teachingViews;
-      if (achievements !== undefined) existingProfile.achievements = achievements;
-      if (education !== undefined) existingProfile.education = education;
-      if (experience !== undefined) existingProfile.experience = experience;
-      
-      const updatedProfile = await userService.updateUserDetails(existingProfile);
-      return res.status(HttpStatus.OK).json({ message: "Profile successfully updated", profile: updatedProfile });
-
+    existingProfile.firstName = firstName ?? existingProfile.firstName;
+    existingProfile.lastName = lastName ?? existingProfile.lastName;
+    if (about !== undefined) existingProfile.about = about;
+    if (country !== undefined) existingProfile.country = country;
+    if (occupation !== undefined) existingProfile.occupation = occupation;
+    if (currentInstitution !== undefined) existingProfile.currentInstitution = currentInstitution;
+    if (teachingViews !== undefined) existingProfile.teachingViews = teachingViews;
+    if (achievements !== undefined) existingProfile.achievements = achievements;
+    if (education !== undefined) existingProfile.education = education;
+    if (experience !== undefined) existingProfile.experience = experience;
+    
+    const updatedProfile = await userService.updateUserDetails(existingProfile);
+    return res.status(HttpStatus.OK).json({ message: "Profile successfully updated", profile: updatedProfile });
   } catch (error:any) {
     console.error("Error updating profile:", error);
     return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while updating the profile",error: error.message});
   }
-
 };
 
 
-
-
-
 export const getSession = async (req: Request, res: Response): Promise<Response> => {
-  console.log("***GET SESSION****");
-
-  const { sessionId } = req.params;
-  console.log("sessionId:- ", sessionId);
-  
-  const {id, role} = req.userData as IUserData;
-  console.log("id, role:- ", id, role);
-  
-    try {
-      const user = await userService.findUserById(id);
-      if (!user) {
-          return res.status(HttpStatus.NOT_FOUND).json({ message: "Instructor not found" });
-      }
-
-      const session = await userService.findSessionById(sessionId);
-      if (!session) {
-          return res.status(HttpStatus.NOT_FOUND).json({ message: "Session not found" });
-      }
-      console.log("session info:- ", session);
-      
-      console.log(
-        "session info instructorId:- ",
-        (session.instructorId as IInstructor)?.firstName,
-        (session.instructorId as IInstructor)?.lastName,
-        (session.instructorId as IInstructor)?.image.url,
-        (session.instructorId as IInstructor)?._id
-      );
-    
-      const sessionData = {
-        id: session._id,
-        title: session.title,
-        introduction: session.introduction,
-        duration: session.duration,
-        fee: session.fee,
-        descriptionTitle: session.descriptionTitle,
-        description: session.description,
-        timeSlots: session.timeSlots,
-        sessionimgUrl: session.coverImage?.url ? session.coverImage?.url : null,
-        sessionimgKey: session.coverImage?.key ? session.coverImage?.key : null,
-
-        instructorId: (session.instructorId as IInstructor)?._id,
-        firstName: (session.instructorId as IInstructor)?.firstName,
-        lastName: (session.instructorId as IInstructor)?.lastName,
-        instructorImg: (session.instructorId as IInstructor)?.image.url,
-      };
-      console.log("sessionData:- ", sessionData);
-
-      return res.status(HttpStatus.OK).json({ message: "Session details fetched successfully",  ...sessionData });
-    } catch (error) {
-      console.error("Error fetching session data:- ", error);
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while fetching the session deta" });
+  const { sessionId } = req.params;  
+  const {id, role} = req.userData as IUserData;  
+  try {
+    const user = await userService.findUserById(id);
+    if (!user) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: "Instructor not found" });
     }
+
+    const session = await userService.findSessionById(sessionId);
+    if (!session) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: "Session not found" });
+    }
+  
+    const sessionData = {
+      id: session._id,
+      title: session.title,
+      introduction: session.introduction,
+      duration: session.duration,
+      fee: session.fee,
+      descriptionTitle: session.descriptionTitle,
+      description: session.description,
+      timeSlots: session.timeSlots,
+      sessionimgUrl: session.coverImage?.url ? session.coverImage?.url : null,
+      sessionimgKey: session.coverImage?.key ? session.coverImage?.key : null,
+
+      instructorId: (session.instructorId as IInstructor)?._id,
+      firstName: (session.instructorId as IInstructor)?.firstName,
+      lastName: (session.instructorId as IInstructor)?.lastName,
+      instructorImg: (session.instructorId as IInstructor)?.image.url,
+    };
+    
+    return res.status(HttpStatus.OK).json({ message: "Session details fetched successfully",  ...sessionData });
+  } catch (error) {
+    console.error("Error fetching session data:- ", error);
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while fetching the session deta" });
+  }
 };
 
 
 export const createSession = async (req: Request, res: Response): Promise<Response> => {
-  console.log("***CREATE SESSION****");
-
-  const { title, introduction, duration, fee, descriptionTitle, description,  rawTimeSlots } = req.body;
+  const { title, introduction, duration, fee, descriptionTitle, description, category, rawTimeSlots } = req.body;
   const timeSlots = rawTimeSlots.split(',');
-  console.log("req.body:- ",  title, introduction, duration, fee, descriptionTitle, description, rawTimeSlots);
-  console.log("session time rawTimeSlots:- ", rawTimeSlots);
+  console.log("req.body :- ",  title, introduction, duration, fee, descriptionTitle, description, rawTimeSlots);
+  console.log("session time rawTimeSlots :- ", rawTimeSlots);
 
   const coverImageFile = req.file;
   console.log("session cover image:- ", coverImageFile);
@@ -302,6 +248,9 @@ export const createSession = async (req: Request, res: Response): Promise<Respon
   if (!rawTimeSlots) {
     return res.status(HttpStatus.BAD_REQUEST).json({ message: "Time slots are required" });
   }
+  if (!category) {
+    return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Category is required' });
+  }
   if (!coverImageFile) {
     return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Cover image is required' });
   }
@@ -317,7 +266,6 @@ export const createSession = async (req: Request, res: Response): Promise<Respon
   
   try {
     const {id, role} = req.userData as IUserData;
-    console.log("id, role:- ", id, role);
 
     const { url: coverImageUrl, key: coverImageKey } = await uploadImageToS3(coverImageFile);
     console.log(" image url from  s3:- ", coverImageUrl); 
@@ -335,6 +283,7 @@ export const createSession = async (req: Request, res: Response): Promise<Respon
       fee, 
       descriptionTitle,
       description, 
+      category,
       timeSlots,
       coverImage: {
         url: coverImageUrl,  
@@ -343,28 +292,21 @@ export const createSession = async (req: Request, res: Response): Promise<Respon
       instructorId: new mongoose.Types.ObjectId(id),
     } as Partial<ISession>);
 
-      return res.status(HttpStatus.OK).json({ message: 'Session successfully created', data: session,  file: coverImageFile });
+    return res.status(HttpStatus.OK).json({ message: 'Session successfully created', data: session,  file: coverImageFile });
   } catch (error:any) {
-      console.error("Error creating session profile:- ", error);
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while creating the session",error: error.message});
+    console.error("Error creating session profile:- ", error);
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while creating the session",error: error.message});
   }
 };
 
 
-
-
-
-
 export const updateSession = async (req: Request, res: Response): Promise<Response> => {
-  console.log("***UPDATE SESSION****");
-
-  const { title, introduction, duration, fee, descriptionTitle, description,  rawTimeSlots, imageStatus, sessionId } = req.body;
-  console.log("req.body:- ",  title, introduction, duration, fee, descriptionTitle, description,  rawTimeSlots, imageStatus, sessionId);
-  console.log("02:48,02:48,23:51 rawTimeSlots:- ", rawTimeSlots);
+  const { title, introduction, duration, fee, descriptionTitle, description, category, rawTimeSlots, imageStatus, sessionId } = req.body;
+  console.log("(02:48,02:48,23:51 - format) rawTimeSlots:- ", rawTimeSlots);
 
   const timeSlots = rawTimeSlots.split(',');
   console.log("session time slots:- ", timeSlots);
-  console.log("imageStatus..>>   ", imageStatus);
+  console.log("imageStatus -> ", imageStatus);
   
   const coverImageFile = req.file;
   console.log("cover image", coverImageFile);
@@ -390,6 +332,9 @@ export const updateSession = async (req: Request, res: Response): Promise<Respon
   if (!rawTimeSlots) {
     return res.status(HttpStatus.BAD_REQUEST).json({ message: "Time slots are required" });
   }
+  if (!category) {
+    return res.status(HttpStatus.BAD_REQUEST).json({ message: "Category required" });
+  }
   if (!coverImageFile) {
     return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Cover image is required' });
   }
@@ -404,7 +349,6 @@ export const updateSession = async (req: Request, res: Response): Promise<Respon
   }
   try {
     const {id, role} = req.userData as IUserData;
-    console.log("id, role:- ", id, role);
 
     const imageUnchanged = imageStatus === 'unchanged';
     const deleteCoverImage = imageStatus === 'deleted';
@@ -452,6 +396,7 @@ export const updateSession = async (req: Request, res: Response): Promise<Respon
     existingSession.fee = fee ?? existingSession.fee;
     existingSession.descriptionTitle = descriptionTitle ?? existingSession.descriptionTitle;
     existingSession.description = description ?? existingSession.description;
+    existingSession.category = category ?? existingSession.category;
     existingSession.timeSlots = timeSlots ?? existingSession.timeSlots;
       
     const updatedSession = await userService.updateSessionDetails(existingSession);
@@ -498,85 +443,48 @@ export const deleteSession = async (req: Request, res: Response): Promise<Respon
 };
 
 
-
 export const switchUserRole = async (req: Request, res: Response): Promise<Response> => {
-  // const { userId } = req.body;
-
-  let token = req.header("Authorization"); 
-  console.log("token in instructor role switch", token);
-
   const {id, role} = req.userData as IUserData;
-  console.log("id, role", id, role);
-
-
   const newRole = 'student'
-
   try {
-    const updatedUser = await userService.switchUserRole(id, newRole)
-    console.log("updatedUser-", updatedUser);
-    
+    const updatedUser = await userService.switchUserRole(id, newRole)    
     return res.status(HttpStatus.CREATED).json({ message: "User role updated successfully", ...updatedUser });
   } catch (error) {
     console.error("Error updating user role:", error);
     return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error updating user role:" });
   }
-
 }
 
 
 export const bookedSessions = async (req: Request, res: Response): Promise<Response> => {
-  
-  let token = req.header("Authorization"); 
-  console.log("token in student payment", token);
-
   const {id, role} = req.userData as IUserData;
-  console.log("id, role", id, role);
-
-
-
   try {
-    const bookedSessions = await userService.instructorBookedSessions(id)
-    console.log("Booked sessions-----------", bookedSessions);
-    
+    const bookedSessions = await userService.instructorBookedSessions(id)    
     return res.status(HttpStatus.OK).json({ message: "Booked sessions fetched successfully", ...bookedSessions });
   } catch (error) {
     console.error("Error fetching booked sessions:", error);
     return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching booked sessions:" });
   }
-
 }
 
 
 export const availableSessions = async (req: Request, res: Response): Promise<Response> => {
-  
-  let token = req.header("Authorization"); 
-  console.log("token in student payment", token);
-
   const {id, role} = req.userData as IUserData;
-  console.log("id, role", id, role);
   try {
-    const availableSessions = await userService.instructorAvailableSessions(id)
-    console.log("Booked sessions-----------", availableSessions);
-    
+    const availableSessions = await userService.instructorAvailableSessions(id)    
     return res.status(HttpStatus.OK).json({ message: "Instructor sessions fetched successfully", ...availableSessions });
   } catch (error) {
     console.error("Error fetching booked sessions:", error);
     return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching instructor sessions:" });
   }
-
 }
 
 
-
 export const sessionHistory = async (req: Request, res: Response): Promise<Response> => {
-  let token = req.header("Authorization"); 
   const {id, role} = req.userData as IUserData;
-  console.log("id, role", id, role);
-  console.log("token ", token);
+  
   try {
-    const bookedSessions = await userService.instructorSessionHistory(id)
-    console.log("Booked sessions : ", bookedSessions);
-    
+    const bookedSessions = await userService.instructorSessionHistory(id)    
     return res.status(HttpStatus.OK).json({ message: "Session history fetched successfully", historyData: bookedSessions });
   } catch (error) {
     console.error("Error fetching booked sessions:", error);
@@ -596,7 +504,6 @@ export const searchSessions = async (req: Request, res: Response): Promise<Respo
   try {
     const searchResults = await userService.instructorSearchSessions(query, id);
     return res.status(HttpStatus.OK).json({ message: "Search results fetched successfully",  searchResults });
-
   } catch (error) {
     console.error("Error performing search:", error);
     return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error performing search" });
@@ -607,7 +514,6 @@ export const searchSessions = async (req: Request, res: Response): Promise<Respo
 export const fetchNotifications = async (req: Request, res: Response): Promise<Response> => {
   try {
     const {id, role} = req.userData as IUserData;
-    console.log("id, role", id, role);
     const notifications = await userService.fetchNotifications();
     return res.status(HttpStatus.OK).json({ message: "Notifications fetched successfully", notifications,});
   } catch (error) {
@@ -617,132 +523,150 @@ export const fetchNotifications = async (req: Request, res: Response): Promise<R
 }
 
 
-export const createMessage = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const {id, role} = req.userData as IUserData;
-    console.log("id, role", id, role);
-    const { chatPartnerId, content  } = req.body;
-    console.log("chatPartnerId", chatPartnerId);
-    
-    
-    if (!chatPartnerId) {
-      console.log("Partner Id is missing");
-      return res.status(HttpStatus.BAD_REQUEST).json({ message: "Partner Id is missing" });
-    }
+export const createPost = async (req: Request, res: Response): Promise<Response> => {
+  const { description } = req.body;
 
-    if (!content) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ message: "Content is missing" });
-    }
+  const image = req.file;
+  console.log("post image:- ", image);
 
-    const messageData = {
-      senderId: id,
-      receiverId: chatPartnerId,
-      content
-    }
-    const newMessage = await userService.createMessage(messageData);
-    if (!newMessage) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to create message" });
-    }
-
-    if (!newMessage._id) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Message creation failed: Invalid message ID" });
-    }
-
-    // const chatExist = await userService.findChatWithUserIds(id, chatPartnerId);
-    const chatExist: IChat | null = await userService.findChatWithUserIds(id, chatPartnerId);
-
-
-    if (!chatExist) {
-      const chatData: Partial<IChat> = {
-        usersId: [id, chatPartnerId],
-        messageIds: [newMessage?._id.toString()], // Ensure string[]
-        lastMessageId: newMessage?._id.toString(), // Ensure string
-        unreadCounts: [
-          { userId: chatPartnerId, count: 1 },
-          { userId: id, count: 0 }, // Sender has no unread messages
-        ],
-      };
-
-      const newChat = await userService.createChat(chatData);
-      if (!newChat) {
-        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to create chat" });
-      }
-
-      return res.status(HttpStatus.CREATED).json({ message: "Chat & message created", chat: newChat });
-    }else {
-      const updateChatData = {
-        messageIds: [...(chatExist.messageIds || []), newMessage?._id.toString()],
-        lastMessageId: newMessage?._id.toString(),
-        unreadCounts: [
-          {
-            userId: chatPartnerId,
-            count: chatExist?.unreadCounts?.find(u => u.userId === chatPartnerId)?.count ?? 0 + 1, // Using nullish coalescing for undefined
-          },
-          { userId: id, count: 0 },
-        ],
-      };
-
-      const updatedChat = await userService.updateChatMessages(
-        chatExist._id,
-        updateChatData
-      );
-
-      if (!updatedChat) {
-        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to update chat" });
-      }
-
-      return res.status(HttpStatus.OK).json({ message: "Message sent and chat updated", chat: updatedChat });
-    }
-  } catch (error) {
-    console.error("Error creating message:", error);
-    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error creating message" });
+  if (!description) {
+    return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Description required' });
   }
-}
-
-export const fetchChat = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const {id, role} = req.userData as IUserData;
-    console.log("id, role", id, role);
-
-    // const { chatPartnerId  } = req.body;
-    const chatPartnerId = req.query.chatPartnerId as string;
-    if (!chatPartnerId) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ message: "Partner Id is missing" });
-    }
-
-    const chat: IChat | null = await userService.findChatWithUserIds(id, chatPartnerId);
-    if (!chat) {
-      return res.status(HttpStatus.NOT_FOUND).json({ message: "Chat not found" });
-    }
-
-    // Fetch all messages for the chat, sorted by timestamp 
-    const messages = await userService.fetchMessages(chat.messageIds);
-
-    console.log("chat messages of users-----", messages) 
-
-    return res.status(HttpStatus.OK).json({ message: "Chat fetched successfully", chat, messages });
-  } catch (error) {
-    console.error("Error fetching chat:", error);
-    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching chat:" });
+  if ( !description.trim() ) {
+    return res.status(HttpStatus.BAD_REQUEST).json({ message: "Field cannot be empty" });
   }
-}
-
-
-export const fetchNavbarChatList = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const {id, role} = req.userData as IUserData;
-    console.log("id, role", id, role);
-
-    const chatList: IChat[] | null = await userService.fetchInteractedUsersList(id);
-    if (!chatList) {
-      return res.status(HttpStatus.NOT_FOUND).json({ message: "Chat not found" });
-    }
-
-    console.log("chatList navbar data--------", chatList);
+  if (!image) {
+    return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Cover image is required' });
+  }
   
-    return res.status(HttpStatus.OK).json({ message: "Chat List fetched successfully", chatList, });
+  try {
+    const {id, role} = req.userData as IUserData;
+
+    const { url: imageUrl, key: imageKey } = await uploadImageToS3(image);
+    console.log(" image url from  s3:- ", imageUrl); 
+    console.log(" image key from  s3:- ", imageKey);
+
+    const existingInstructor = await userService.findUserById(id);
+    if (!existingInstructor) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: "Instructor doesn't exist, cannot create post" });
+    }
+
+    const post = await userService.createPost({
+      instructorId: new mongoose.Types.ObjectId(id),
+      description,
+      image: {
+        url: imageUrl,  
+        key: imageKey  
+      },
+    } as Partial<IPost>);
+
+    return res.status(HttpStatus.OK).json({ message: 'Post successfully created', post: post });
+  } catch (error:any) {
+    console.error("Error creating session profile:- ", error);
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while creating the session",error: error.message});
+  }
+};
+
+
+export const getFeedPosts = async (req: Request, res: Response): Promise<Response> => {
+  const {id, role} = req.userData as IUserData;
+  try {
+    const allPosts = await userService.fetchPosts()
+    return res.status(HttpStatus.OK).json({ message: "Posts fetched successfully", posts: allPosts });
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching posts:" });
+  }
+}
+
+
+export const likePost = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const {id, role} = req.userData as IUserData;
+
+    const { postId } = req.params;
+    const post = await PostModel.findById(postId);
+
+    if (!post?.likes) {
+      throw new Error("Post likes are undefined");
+    }
+
+    const isLiked = post?.likes?.get(id);  //get - in Map, this method checks if the userId exists as a key
+    if (isLiked) {
+        post?.likes?.delete(id); //delete - in Map, removing like(or userid) from already liked post,
+    }else{
+        post?.likes?.set(id, true);  //userId is the key, true is the value 
+    }
+
+    const updatedPost = await PostModel.findByIdAndUpdate(
+        postId,
+        {likes: post.likes}, 
+        { new: true }  //if do not specify this option or set it to false, Mongoose will return the og document before the update.
+    ); 
+    return res.status(HttpStatus.OK).json({ message: "Chat List fetched successfully", updatedPost:updatedPost });
   } catch (error) {
     console.error("Error fetching chat:", error);
     return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching chat:" });
   }
 }
+
+
+export const commentPost = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { id } = req.userData as IUserData; 
+    const { postId } = req.params; 
+    const { comment } = req.body; 
+
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: "Post not found" });
+    }
+
+    // Create a comment object, ensuring userId is cast to ObjectId
+    const newComment = {
+      userId: new mongoose.Types.ObjectId(id),
+      comment: comment,
+    };
+    
+    // Add the new comment to the comments array
+    post?.comments?.push(newComment);
+
+    // Save the updated post with the new comment
+    const updatedPost = await post.save();
+
+    // Populate instructor details for the updated post
+    const updatedPostData = await PostModel.findById(updatedPost._id).populate({
+      path: 'instructorId',
+      select: '_id firstName lastName role country image.url',
+    });
+
+    return res.status(HttpStatus.CREATED).json({
+      message: "Comment added successfully",
+      updatedPost: updatedPostData,
+    });
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      message: "Error adding comment",
+    });
+  }
+};
+
+
+export const fetchWallet = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { id, role } = req.userData as IUserData;
+
+    const walletData = await BookingModel.find({ instructorId: id })
+    .populate("studentId", "_id firstName lastName image.url")
+    .populate("sessionId", "fee")    
+
+    return res.status(HttpStatus.OK).json({ message: "Wallet data fetched successfully",  walletData: walletData});
+  } catch (error: any) {
+    console.error("Error fetching Ai chatlist:", error.message);
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "An error occurred while fetching the wallet data." });
+  }
+};
+
+

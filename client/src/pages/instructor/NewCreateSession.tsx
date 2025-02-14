@@ -1,13 +1,22 @@
-import { BitcoinIconsArrowLeftFilled} from '../../assets/usersIcons/ProfileIcon';
+import { BitcoinIconsArrowLeftFilled} from '../../assets/userIcons/ProfileIcon';
 import { FaCamera } from 'react-icons/fa';
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'; 
-import axiosInstance from '../../utils/users/axiosInstance'
+import axiosInstance from '../../utils/user/axiosInstance'
 
 
-
-
-
+const categories = [
+  "Science",
+  "Technology",
+  // "Engineering",
+  "Mathematics",
+  "History",
+  "Languages",
+  "Business",
+  "Finance",
+  "Personal Development",
+  "Arts",
+];
 
 const NewCreateSession = () => {
 
@@ -32,6 +41,8 @@ const NewCreateSession = () => {
 
     const [timeSlots, setTimeSlots] = useState<string[]>([]);
     const [newTimeSlot, setNewTimeSlot] = useState<string>('');
+
+    const [selectedCategory, setSelectedCategory] = useState('');
   
     // Function to add a new time slot
     const addTimeSlot = () => {
@@ -228,6 +239,12 @@ const NewCreateSession = () => {
       alert("Description required. Please provide a valid input.");
       return;
     }
+    
+    if (!selectedCategory) {
+      alert("Category required. Please select a category.");
+      return;
+    }
+    
     if (!timeSlots) {
       alert("Time slots required.");
       return;
@@ -236,6 +253,7 @@ const NewCreateSession = () => {
       alert("Image required. Please provide a valid input.");
       return;
     }
+
 
     // Code to submit form data
     console.log("session data :-----------", sessionData);
@@ -252,6 +270,7 @@ const NewCreateSession = () => {
       formData.append("fee", sessionData.fee);
       formData.append("descriptionTitle", sessionData.descriptionTitle);
       formData.append("description", sessionData.description);
+      formData.append("category", selectedCategory);
       formData.append("rawTimeSlots", timeSlots.join(","));
       formData.append("coverImage", sessionData.coverImage);// Append image status to track image update
 
@@ -419,6 +438,39 @@ const NewCreateSession = () => {
                                 value={sessionData.description} 
                                 onChange={handleChange} 
                                 className='border border-gray-300 rounded-md w-4/12 text-black text-sm placeholder:text-xs px-2' />
+                        </div>
+                        <hr className='ml-60 mr-48 text-black ' />
+
+
+
+
+
+
+
+
+                        <div className='flex w-full ml-64 h-10 space-x-14'>
+                            <p className='w-2/12 text-black font-semibold text-sm font-serif'>Session Category</p>
+                            {/* <input 
+                                type="text" 
+                                placeholder='Description' 
+                                name="description" 
+                                value={sessionData.description} 
+                                onChange={handleChange} 
+                                className='border border-gray-300 rounded-md w-4/12 text-black text-sm placeholder:text-xs px-2' /> */}
+                            
+                            <select
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className='border border-gray-300 rounded-md w-4/12 text-black text-sm px-2'
+                              >
+                                <option value="">Select a category</option>
+                                {categories.map((category) => (
+                                  <option key={category} value={category}>
+                                    {category}
+                                  </option>
+                                ))}
+                              </select>
+
                         </div>
                         <hr className='ml-60 mr-48 text-black ' />
 

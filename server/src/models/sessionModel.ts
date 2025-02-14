@@ -52,7 +52,7 @@ const sessionSchema: Schema<ISession> = new mongoose.Schema({
         required: true 
     },
     timeSlots: { 
-        type: [String], // Array of Date objects directly
+        type: [String], 
         required: true 
     },
     coverImage: {
@@ -79,20 +79,14 @@ const sessionSchema: Schema<ISession> = new mongoose.Schema({
         enum: [
           "Science",
           "Technology",
-          "Engineering",
+        //   "Engineering",
           "Mathematics",
           "History",
           "Languages",
-          "Commerce",
-          "Economics",
           "Business",
-          "Management",
-          "IT and Software",
           "Finance",
-          "Accounting",
           "Personal Development",
           "Arts",
-          "Health and Wellness"
         ],
         required: false
       },
